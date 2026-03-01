@@ -38,10 +38,17 @@ export default function PlaysPage() {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const filteredPlays = useMemo(
-    () => plays.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()) && (!tag || p.tags.includes(tag)) && (!folderId || p.folderId === folderId)),
-    [plays, q, tag, folderId]
-  );
+  const filteredPlays = useMemo(() => {
+    const query = q.trim().toLowerCase();
+
+    return plays.filter((p) => {
+      const matchesQuery = !query || p.name.toLowerCase().includes(query);
+      const matchesTag = !tag || (p.tags ?? []).includes(tag);
+      const matchesFolder = !folderId || p.folderId === folderId;
+
+      return matchesQuery && matchesTag && matchesFolder;
+    });
+  }, [plays, q, tag, folderId]);
 
   const createFolder = async () => {
     const input = window.prompt('Folder name', 'New Folder');
@@ -112,7 +119,7 @@ export default function PlaysPage() {
         <div className="grid gap-4 pr-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredPlays.length === 0 ? (
             <div className="col-span-3 py-20 text-center text-gray-400">
-              <p className="text-lg">No plays found</p>
+              <p className="text-lg font-semibold">No plays found</p>
               <p className="mt-1 text-sm">Try adjusting your search or filters</p>
             </div>
           ) : null}

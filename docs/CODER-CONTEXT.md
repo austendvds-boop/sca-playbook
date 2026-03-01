@@ -194,6 +194,31 @@ Implemented and verified all requested fixes:
 - `src/app/plays/[id]/page.tsx`
 - `src/app/plays/page.tsx`
 - `docs/CODER-CONTEXT.md`
+## 2026-03-01 ChalkTalk quick fix — play library search + empty state
+
+### Build status
+- Command: `npm run build`
+- Result: ✅ Success (zero errors)
+
+### Fixes implemented
+- File: `src/app/plays/page.tsx`
+- Search/filter pipeline hardened and verified:
+  - Search input remains controlled with `value={q}` and `onChange={(e) => setQ(e.target.value)}`.
+  - `filteredPlays` now computes with explicit query normalization (`q.trim().toLowerCase()`), and requires combined matches for:
+    - play name (case-insensitive query includes)
+    - active `tag`
+    - active `folderId`
+  - Tag filtering now safely handles missing tags via `(p.tags ?? []).includes(tag)`.
+- Rendering path confirmed:
+  - Play cards map over `filteredPlays` (not `plays`).
+- Empty state updated/verified:
+  - Renders when `filteredPlays.length === 0`.
+  - `No plays found` headline now uses requested `text-lg font-semibold` styling.
+
+### Files touched
+- `src/app/plays/page.tsx`
+- `docs/CODER-CONTEXT.md`
+
 ## 2026-03-01 ChalkTalk UI polish batch (21 items)
 
 ### Build status

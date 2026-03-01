@@ -36,7 +36,8 @@ export function PlayCardTemplate({
           <EditableText value={layout.concept} placeholder='________' onSave={(concept) => onChange({ ...layout, concept })} className='inline min-h-6' />
         </div>
         <div className='px-3 py-2'>
-          <EditableText value={layout.description} placeholder='description' onSave={(description) => onChange({ ...layout, description })} className='min-h-6' />
+          <span className='mr-1 font-black'>SITUATION:</span>
+          <EditableText value={layout.description} placeholder='e.g. 2nd & 8, +40' onSave={(description) => onChange({ ...layout, description })} className='inline min-h-6' />
         </div>
       </div>
 

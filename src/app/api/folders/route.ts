@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
-import { store } from '@/lib/store';
-import { v4 as uuid } from 'uuid';
+import { createFolder, getSeedFolders, listFolders } from '@/lib/playPersistence';
 
-export async function GET() { return NextResponse.json({ data: store.folders, count: store.folders.length }); }
+export async function GET() {
+  const data = [...getSeedFolders(), ...(await listFolders())];
+  return NextResponse.json({ data, count: data.length });
+}
+
 export async function POST(req: Request) {
   const body = (await req.json()) as { name?: string; parentId?: string };
-  const folder = { id: uuid(), name: body.name || 'New Folder', parentId: body.parentId };
-  store.folders.push(folder);
+  const folder = await createFolder(body.name || 'New Folder', body.parentId);
   return NextResponse.json({ data: folder });
 }

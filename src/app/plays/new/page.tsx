@@ -47,11 +47,11 @@ export default function NewPlay() {
 
   const insertOLGroup = () => {
     const group: CanvasElement[] = [
-      { id: uuid(), type: 'player', x: 380, y: 320, position: 'LT', side: 'offense' },
-      { id: uuid(), type: 'player', x: 440, y: 320, position: 'LG', side: 'offense' },
+      { id: uuid(), type: 'player', x: 420, y: 320, position: 'LT', side: 'offense' },
+      { id: uuid(), type: 'player', x: 460, y: 320, position: 'LG', side: 'offense' },
       { id: uuid(), type: 'player', x: 500, y: 320, position: 'C', side: 'offense' },
-      { id: uuid(), type: 'player', x: 560, y: 320, position: 'RG', side: 'offense' },
-      { id: uuid(), type: 'player', x: 620, y: 320, position: 'RT', side: 'offense' }
+      { id: uuid(), type: 'player', x: 540, y: 320, position: 'RG', side: 'offense' },
+      { id: uuid(), type: 'player', x: 580, y: 320, position: 'RT', side: 'offense' }
     ];
     setElements((prev) => {
       const next = new Map(prev);

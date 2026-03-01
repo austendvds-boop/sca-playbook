@@ -31,12 +31,8 @@ function simplifyPoints(points: Point[]): Point[] {
 }
 
 function lineElementFromTool(tool: 'route' | 'dashed_route' | 'tbar', points: Point[]): LineElement {
-  if (tool === 'dashed_route') {
-    return { id: uuid(), type: 'motion', lineStyle: 'dashed_route', points, color: '#111' };
-  }
-  if (tool === 'tbar') {
-    return { id: uuid(), type: 'block', lineStyle: 'tbar', points, color: '#111' };
-  }
+  if (tool === 'dashed_route') return { id: uuid(), type: 'motion', lineStyle: 'dashed_route', points, color: '#111' };
+  if (tool === 'tbar') return { id: uuid(), type: 'block', lineStyle: 'tbar', points, color: '#111' };
   return { id: uuid(), type: 'route', lineStyle: 'route', points, color: '#111' };
 }
 
@@ -44,7 +40,7 @@ export function FieldSVG() {
   const [tool, setTool] = useAtom(activeToolAtom);
   const [elements, setElements] = useAtom(elementsAtom);
   const [selected, setSelected] = useAtom(selectedIdsAtom);
-  const [undo, setUndo] = useAtom(undoStackAtom);
+  const [, setUndo] = useAtom(undoStackAtom);
   const [, setRedo] = useAtom(redoStackAtom);
   const [viewport, setViewport] = useAtom(viewportAtom);
   const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
@@ -54,10 +50,9 @@ export function FieldSVG() {
   const [draggingPlayer, setDraggingPlayer] = useState<{ id: string; x: number; y: number } | null>(null);
 
   const elementArr = useMemo(() => [...elements.values()], [elements]);
-  const pushUndo = () => setUndo([...undo, elementArr]);
 
   const commit = (next: Map<string, CanvasElement>) => {
-    pushUndo();
+    setUndo((prev) => [...prev, [...elements.values()]]);
     setRedo([]);
     setElements(next);
   };
@@ -78,7 +73,6 @@ export function FieldSVG() {
     const next = new Map(elements);
 
     if (tool === 'zone') {
-      // Zone: commit the line + spawn small ellipse at the tip
       const lastPt = simplified[simplified.length - 1];
       const lineEl: LineElement = { id: uuid(), type: 'route', lineStyle: 'route', points: simplified, color: '#111', noArrow: true };
       next.set(lineEl.id, lineEl);
@@ -96,26 +90,41 @@ export function FieldSVG() {
 
   useEffect(() => {
     const onKey = (evt: KeyboardEvent) => {
+      const target = evt.target as HTMLElement | null;
+      const tag = target?.tagName?.toLowerCase();
+      if (target?.isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select') return;
+
       const key = evt.key.toLowerCase();
-      if (key === 'v') setTool('select');
-      if (key === 'a') setTool('route');
+      const mod = evt.metaKey || evt.ctrlKey;
+
+      if (mod && key === 'z') {
+        evt.preventDefault();
+        if (evt.shiftKey) {
+          window.dispatchEvent(new CustomEvent('canvas-redo'));
+        } else {
+          window.dispatchEvent(new CustomEvent('canvas-undo'));
+        }
+        return;
+      }
+
+      if (key === 'r') setTool('route');
       if (key === 'm') setTool('dashed_route');
-      if (key === 'r') setTool('tbar');
+      if (key === 'b') setTool('tbar');
       if (key === 'z') setTool('zone');
-      if (evt.key === 'Delete' && selected.size > 0) {
+      if (key === 's' || evt.key === 'Escape') setTool('select');
+
+      if ((evt.key === 'Delete' || evt.key === 'Backspace') && selected.size > 0) {
+        evt.preventDefault();
         const next = new Map(elements);
         selected.forEach((id) => next.delete(id));
         commit(next);
         setSelected(new Set());
       }
     };
+
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [setTool, elements, selected, setSelected]);
-
-  const onCanvasClick = (_evt: React.PointerEvent<SVGSVGElement>) => {
-    // nothing needed here now
-  };
 
   const onPointerMove = (evt: React.PointerEvent<SVGSVGElement>) => {
     const p = svgPoint(evt);
@@ -153,9 +162,7 @@ export function FieldSVG() {
       const last = freehandRef.current[freehandRef.current.length - 1];
       const dx = p.x - last.x;
       const dy = p.y - last.y;
-      if (Math.sqrt(dx * dx + dy * dy) > 1) {
-        freehandRef.current = [...freehandRef.current, p];
-      }
+      if (Math.sqrt(dx * dx + dy * dy) > 1) freehandRef.current = [...freehandRef.current, p];
       commitFreehand(freehandRef.current);
       isDrawingRef.current = false;
       freehandRef.current = [];
@@ -163,10 +170,10 @@ export function FieldSVG() {
     }
   };
 
-  const onDoubleClick = () => {};
+  const cursorClass = tool === 'select' ? 'cursor-default' : tool === 'route' || tool === 'dashed_route' || tool === 'tbar' || tool === 'zone' ? 'cursor-crosshair' : 'cursor-not-allowed';
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-none bg-gray-100">
+    <div className={`relative h-full w-full overflow-hidden rounded-none bg-gray-100 ${cursorClass}`}>
       <PlaySVGRenderer
         elements={elementArr}
         className="h-full w-full"
@@ -174,10 +181,8 @@ export function FieldSVG() {
         previewPath={preview}
         draggingPlayer={draggingPlayer ?? undefined}
         touchActionNone
-        onCanvasClick={onCanvasClick}
         onCanvasPointerMove={onPointerMove}
         onCanvasPointerUp={onPointerUp}
-        onCanvasDoubleClick={onDoubleClick}
         onPlayerPointerDown={(id, evt, x, y) => {
           evt.stopPropagation();
           if (isLineTool(tool)) {
@@ -196,14 +201,10 @@ export function FieldSVG() {
         selectedIds={selected}
         onLinePointerDown={(id, evt) => {
           evt.stopPropagation();
-          if (tool === 'select') {
-            setSelected(new Set([id]));
-          }
+          if (tool === 'select') setSelected(new Set([id]));
         }}
         onBackgroundPointerDown={(evt) => {
-          if (evt.pointerType === 'touch' && evt.isPrimary === false) {
-            setViewport({ ...viewport, x: viewport.x + 3, y: viewport.y + 3 });
-          }
+          if (evt.pointerType === 'touch' && evt.isPrimary === false) setViewport({ ...viewport, x: viewport.x + 3, y: viewport.y + 3 });
           if (isLineTool(tool)) {
             startFreehand(evt, svgPoint(evt));
             return;
@@ -214,4 +215,3 @@ export function FieldSVG() {
     </div>
   );
 }
-

@@ -54,10 +54,10 @@ function TBarIcon({ className }: { className?: string }) {
 }
 
 const tools: { key: Tool; label: string; shortcut: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { key: 'select', label: 'Select', shortcut: 'V', icon: MousePointer2 },
-  { key: 'route', label: 'Route', shortcut: 'A', icon: RouteIcon },
+  { key: 'select', label: 'Select', shortcut: 'S', icon: MousePointer2 },
+  { key: 'route', label: 'Route', shortcut: 'R', icon: RouteIcon },
   { key: 'dashed_route', label: 'Motion', shortcut: 'M', icon: DashedRouteIcon },
-  { key: 'tbar', label: 'Block', shortcut: 'R', icon: TBarIcon },
+  { key: 'tbar', label: 'Block', shortcut: 'B', icon: TBarIcon },
   { key: 'zone', label: 'Zone', shortcut: 'Z', icon: Hexagon }
 ];
 
@@ -114,6 +114,7 @@ export function CanvasToolbar({
   onDelete,
   onExportPng,
   onMirror,
+  onClearCanvas,
   onInsertPlayer,
   onInsertOLGroup,
   onApplyPreset,
@@ -132,6 +133,7 @@ export function CanvasToolbar({
   onDelete?: () => void;
   onExportPng?: () => void;
   onMirror?: () => void;
+  onClearCanvas?: () => void;
   onInsertPlayer: (token: PlayerToken) => void;
   onInsertOLGroup: () => void;
   onApplyPreset: (presetName: string, side: 'offense' | 'defense') => void;
@@ -208,6 +210,7 @@ export function CanvasToolbar({
           {menuOpen ? (
             <div className="absolute right-0 top-10 w-44 overflow-hidden rounded-md border border-white/10 bg-[#111125] shadow-xl">
               {onMirror ? <button onClick={() => { onMirror(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Mirror Play</button> : null}
+              {onClearCanvas ? <button onClick={() => { onClearCanvas(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Clear Canvas</button> : null}
               {onExportPng ? <button onClick={() => { onExportPng(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Export PNG</button> : null}
               {onDelete ? <button onClick={() => { onDelete(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-red-500/20">Delete Play</button> : null}
             </div>

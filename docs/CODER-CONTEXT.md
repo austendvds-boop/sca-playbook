@@ -49,3 +49,54 @@ Implemented and verified all requested fixes:
 ## Notes for next agent
 - `docs/CODER-CONTEXT.md` did not previously exist in this repo; created during this batch.
 - There is still a Next.js warning about inferred Turbopack root due to multiple lockfiles in parent directories (non-blocking).
+
+## 2026-03-01 ChalkTalk full bug + UI fix batch
+
+### Commit / deploy
+- Commit: `23332f4`
+- Branch: `master`
+- Live alias: https://sca-playbook.vercel.app
+- Vercel deployment: https://sca-playbook-9h82gnchy-austs-projects-ee024705.vercel.app
+
+### Build status
+- Command: `npm run build`
+- Result: ✅ Success
+- TypeScript: ✅ No errors
+
+### Major changes
+- Persistent play/folder storage added (Postgres-backed) with bootstrap table creation:
+  - `src/lib/playPersistence.ts` (new)
+  - APIs switched from in-memory store to DB-backed repo while still merging seed plays/folders into list responses.
+  - Files touched:
+    - `src/app/api/plays/route.ts`
+    - `src/app/api/plays/[id]/route.ts`
+    - `src/app/api/plays/[id]/duplicate/route.ts`
+    - `src/app/api/folders/route.ts`
+    - `src/app/api/folders/[id]/route.ts`
+- Whiteboard (`/plays/[id]`) functional/UI upgrades:
+  - Undo/redo wired to canvas mutations (insert/delete/preset/mirror/clear)
+  - Mirror now flips current canvas around x=500 (`newX = 1000 - oldX`)
+  - Added Clear Canvas action in More Options
+  - OL group spawn spacing set to LT/LG/C/RG/RT at 420/460/500/540/580
+  - Added tag editor row with toggle + persisted PUT save
+  - Added keyboard shortcuts (R/M/B/Z/S/Escape/Delete/Backspace/Cmd/Ctrl+Z/Cmd/Ctrl+Shift+Z)
+  - Canvas viewport height constrained (`calc(100vh - 148px)`)
+  - File touched: `src/app/plays/[id]/page.tsx`
+- Canvas behavior/visuals:
+  - Cursor changes by active tool
+  - Selected player visual ring/glow
+  - OL rendered as square markers (LT/LG/C/RG/RT)
+  - File touched: `src/components/shared/PlaySVGRenderer.tsx`
+  - File touched: `src/components/canvas/FieldSVG.tsx`
+- Field markup enhancements:
+  - Added sideline markers at x=20/x=980
+  - Added subtle 5-yard interval guide lines + labels above/below LOS
+  - File touched: `src/components/canvas/FieldBackground.tsx`
+- Install sheet/play picker fixes:
+  - Insert Play picker now renders actual SVG previews using shared renderer (no more “No Thumbnail” placeholder)
+  - File touched: `src/app/documents/[id]/page.tsx`
+- Install sheet header copy tweak:
+  - Changed third header cell to `SITUATION:` and placeholder `e.g. 2nd & 8, +40`
+  - File touched: `src/components/templates/PlayCardTemplate.tsx`
+- New-play OL group spacing aligned with main whiteboard
+  - File touched: `src/app/plays/new/page.tsx`

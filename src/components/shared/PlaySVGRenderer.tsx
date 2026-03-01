@@ -128,15 +128,16 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
           if (el.type === 'player') {
             const selected = selectedIds?.has(el.id);
             const upper = el.position.toUpperCase();
-            const isCenter = upper === 'C' && el.side === 'offense';
+            const isOL = ['LT', 'LG', 'C', 'RG', 'RT'].includes(upper);
             const lb = ['B', 'W', 'M', 'F', 'MIKE', 'WILL', 'SAM', 'LB'].some((s) => upper === s || upper.includes(s));
             const fill = el.side === 'offense' ? '#CC0000' : lb ? '#15803d' : '#003087';
             const renderX = draggingPlayer?.id === el.id ? draggingPlayer.x : el.x;
             const renderY = draggingPlayer?.id === el.id ? draggingPlayer.y : el.y;
             return (
               <g key={el.id} onPointerDown={(evt) => onPlayerPointerDown?.(el.id, evt, renderX, renderY)}>
-                {!isCenter ? <circle cx={renderX} cy={renderY} r={14} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 2.5 : 1} /> : null}
-                {isCenter ? <rect x={renderX - 14} y={renderY - 14} width={28} height={28} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 2.5 : 1} rx={4} /> : null}
+                {selected ? <circle cx={renderX} cy={renderY} r={18} fill="none" stroke="rgba(248,250,252,0.45)" strokeWidth={4} /> : null}
+                {!isOL ? <circle cx={renderX} cy={renderY} r={14} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 3 : 1} /> : null}
+                {isOL ? <rect x={renderX - 10} y={renderY - 10} width={20} height={20} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 3 : 1} rx={2} /> : null}
                 <text x={renderX} y={renderY + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">{upper}</text>
               </g>
             );

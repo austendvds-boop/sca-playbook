@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { DocumentRec, Play, ReferenceLayout } from '@/lib/store';
 import { PlayCardTemplate } from '@/components/templates/PlayCardTemplate';
 import { ReferenceSheetTemplate } from '@/components/templates/ReferenceSheetTemplate';
+import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
 import { defaultPlayCardLayout, normalizePlayCardLayout } from '@/lib/installSheet';
 
 export default function DocEdit({ params }: { params: Promise<{ id: string }> }) {
@@ -129,11 +130,9 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
                 {plays.map((p) => (
                   <button key={p.id} type='button' onClick={() => selectPlayForSlot(p.id)} className='rounded border-2 border-[#003087] p-3 text-left'>
                     <div className='mb-2 text-sm font-black text-[#003087]'>{p.name}</div>
-                    {p.thumbnailSvg ? (
-                      <div className='h-32 w-full overflow-hidden border border-[#003087]' dangerouslySetInnerHTML={{ __html: p.thumbnailSvg }} />
-                    ) : (
-                      <div className='flex h-32 items-center justify-center border border-[#003087] text-xs font-black text-[#003087]'>No Thumbnail</div>
-                    )}
+                    <div className='h-32 w-full overflow-hidden border border-[#003087]'>
+                      <PlaySVGRenderer elements={p.canvasData} className='h-full w-full' />
+                    </div>
                   </button>
                 ))}
               </div>

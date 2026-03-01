@@ -10,6 +10,7 @@ import { offensePresets, defensePresets } from '@/lib/presets';
 import { CanvasElement } from '@/lib/store';
 
 const FIELD_CENTER = { x: 500, y: 320 };
+const TAG_OPTIONS = ['red_zone', 'goal_line', '3rd_down', '2_minute', 'general'];
 
 export default function PlayEdit({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -18,7 +19,15 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   const [undoStack, setUndo] = useAtom(undoStackAtom);
   const [redoStack, setRedo] = useAtom(redoStackAtom);
   const [name, setName] = useState('Play');
+  const [tags, setTags] = useState<string[]>(['general']);
+  const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const router = useRouter();
+
+  const applyCanvasChange = (updater: (prev: Map<string, CanvasElement>) => Map<string, CanvasElement>) => {
+    setUndo((prev) => [...prev, [...elements.values()]]);
+    setRedo([]);
+    setElements((prev) => updater(prev));
+  };
 
   useEffect(() => {
     fetch(`/api/plays/${id}`)
@@ -31,8 +40,20 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
         setUndo([]);
         setRedo([]);
         setName(d.data?.name ?? 'Play');
+        setTags(Array.isArray(d.data?.tags) && d.data.tags.length ? d.data.tags : ['general']);
       });
   }, [id, setElements, setSelected, setUndo, setRedo]);
+
+  useEffect(() => {
+    const onUndoEvent = () => handleUndo();
+    const onRedoEvent = () => handleRedo();
+    window.addEventListener('canvas-undo', onUndoEvent);
+    window.addEventListener('canvas-redo', onRedoEvent);
+    return () => {
+      window.removeEventListener('canvas-undo', onUndoEvent);
+      window.removeEventListener('canvas-redo', onRedoEvent);
+    };
+  });
 
   const offensePresetNames = useMemo(() => offensePresets.map((p) => p.name), []);
   const defensePresetNames = useMemo(() => defensePresets.map((p) => p.name), []);
@@ -43,7 +64,7 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
     await fetch(`/api/plays/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, canvasData: [...elements.values()], thumbnailSvg })
+      body: JSON.stringify({ name, tags, canvasData: [...elements.values()], thumbnailSvg })
     });
   };
 
@@ -53,6 +74,17 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name: nextName })
+    });
+  };
+
+  const toggleTag = async (tag: string) => {
+    const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
+    const normalized = next.length ? next : ['general'];
+    setTags(normalized);
+    await fetch(`/api/plays/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tags: normalized })
     });
   };
 
@@ -86,12 +118,23 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
     img.src = url;
   };
 
-  const mirror = async () => {
-    await fetch(`/api/plays/${id}/duplicate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mirror: true })
+  const mirror = () => {
+    applyCanvasChange((prev) => {
+      const next = new Map<string, CanvasElement>();
+      prev.forEach((e) => {
+        if (e.type === 'player') next.set(e.id, { ...e, x: 1000 - e.x });
+        else if (e.type === 'text') next.set(e.id, { ...e, x: 1000 - e.x });
+        else if (e.type === 'zone') next.set(e.id, { ...e, cx: 1000 - e.cx });
+        else next.set(e.id, { ...e, points: e.points.map((p) => ({ x: 1000 - p.x, y: p.y })) });
+      });
+      return next;
     });
+  };
+
+  const clearCanvas = () => {
+    if (!window.confirm('Clear all players and routes?')) return;
+    applyCanvasChange(() => new Map());
+    setSelected(new Set());
   };
 
   const removePlay = async () => {
@@ -101,19 +144,19 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
 
   const insertPlayer = ({ label, side }: { label: string; side: 'offense' | 'defense' }) => {
     const player: CanvasElement = { id: uuid(), type: 'player', x: FIELD_CENTER.x, y: FIELD_CENTER.y, position: label, side };
-    setElements((prev) => new Map(prev).set(player.id, player));
+    applyCanvasChange((prev) => new Map(prev).set(player.id, player));
     setSelected(new Set([player.id]));
   };
 
   const insertOLGroup = () => {
     const group: CanvasElement[] = [
-      { id: uuid(), type: 'player', x: 380, y: 320, position: 'LT', side: 'offense' },
-      { id: uuid(), type: 'player', x: 440, y: 320, position: 'LG', side: 'offense' },
+      { id: uuid(), type: 'player', x: 420, y: 320, position: 'LT', side: 'offense' },
+      { id: uuid(), type: 'player', x: 460, y: 320, position: 'LG', side: 'offense' },
       { id: uuid(), type: 'player', x: 500, y: 320, position: 'C', side: 'offense' },
-      { id: uuid(), type: 'player', x: 560, y: 320, position: 'RG', side: 'offense' },
-      { id: uuid(), type: 'player', x: 620, y: 320, position: 'RT', side: 'offense' }
+      { id: uuid(), type: 'player', x: 540, y: 320, position: 'RG', side: 'offense' },
+      { id: uuid(), type: 'player', x: 580, y: 320, position: 'RT', side: 'offense' }
     ];
-    setElements((prev) => {
+    applyCanvasChange((prev) => {
       const next = new Map(prev);
       group.forEach((el) => next.set(el.id, el));
       return next;
@@ -126,40 +169,25 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
     const preset = source.find((p) => p.name === presetName);
     if (!preset) return;
 
-    if (side === 'defense') {
-      const confirmed = window.confirm(`Start a new play with ${preset.name} defense?`);
+    if (elements.size > 0) {
+      const confirmed = window.confirm(side === 'defense' ? `Start a new play with ${preset.name} defense?` : `Replace current play with ${presetName}?`);
       if (!confirmed) return;
-      setElements(new Map());
-      setSelected(new Set());
-      setUndo([]);
-      setRedo([]);
-      const next = new Map<string, CanvasElement>();
-      preset.elements.forEach((el) => {
-        const id = uuid();
-        next.set(id, el.type === 'player' ? { ...el, id, side: 'defense' } : { ...el, id });
-      });
-      setElements(next);
-      return;
     }
 
-    if (elements.size > 0) {
-      const confirmed = window.confirm(`Replace current play with ${presetName}?`);
-      if (!confirmed) return;
-    }
     const next = new Map<string, CanvasElement>();
     preset.elements.forEach((el) => {
-      const id = uuid();
-      next.set(id, { ...el, id });
+      const elId = uuid();
+      next.set(elId, el.type === 'player' && side === 'defense' ? { ...el, id: elId, side: 'defense' } : { ...el, id: elId });
     });
-    setElements(next);
+    applyCanvasChange(() => next);
     setSelected(new Set());
   };
 
   const handleUndo = () => {
     if (undoStack.length === 0) return;
     const prev = undoStack[undoStack.length - 1];
-    setUndo(undoStack.slice(0, -1));
-    setRedo([...redoStack, [...elements.values()]]);
+    setUndo((stack) => stack.slice(0, -1));
+    setRedo((stack) => [...stack, [...elements.values()]]);
     setElements(new Map(prev.map((el) => [el.id, el])));
     setSelected(new Set());
   };
@@ -167,17 +195,17 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   const handleRedo = () => {
     if (redoStack.length === 0) return;
     const next = redoStack[redoStack.length - 1];
-    setRedo(redoStack.slice(0, -1));
-    setUndo([...undoStack, [...elements.values()]]);
+    setRedo((stack) => stack.slice(0, -1));
+    setUndo((stack) => [...stack, [...elements.values()]]);
     setElements(new Map(next.map((el) => [el.id, el])));
     setSelected(new Set());
   };
 
   const deleteSelected = () => {
     if (selected.size === 0) return;
-    setElements((prev) => {
+    applyCanvasChange((prev) => {
       const next = new Map(prev);
-      selected.forEach((id) => next.delete(id));
+      selected.forEach((selId) => next.delete(selId));
       return next;
     });
     setSelected(new Set());
@@ -194,6 +222,7 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
           onDelete={removePlay}
           onExportPng={exportPng}
           onMirror={mirror}
+          onClearCanvas={clearCanvas}
           onInsertPlayer={insertPlayer}
           onInsertOLGroup={insertOLGroup}
           onApplyPreset={applyPreset}
@@ -205,7 +234,34 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
           canUndo={undoStack.length > 0}
           canRedo={redoStack.length > 0}
         />
-        <div className="flex-1 w-full min-h-0">
+
+        <div className="no-print flex items-center gap-2 border-t border-white/10 bg-[#0E1022] px-3 py-2">
+          <span className="text-xs uppercase tracking-wide text-slate-300">Tags</span>
+          {tags.map((tag) => (
+            <button key={tag} onClick={() => void toggleTag(tag)} className="rounded bg-[#003087] px-2 py-1 text-xs text-white">
+              {tag} ×
+            </button>
+          ))}
+          <div className="relative">
+            <button onClick={() => setTagPickerOpen((v) => !v)} className="rounded border border-white/30 px-2 py-1 text-xs">+
+            </button>
+            {tagPickerOpen ? (
+              <div className="absolute left-0 top-8 z-40 w-40 rounded border border-white/10 bg-[#111125] p-1">
+                {TAG_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => void toggleTag(option)}
+                    className={`block w-full rounded px-2 py-1 text-left text-xs ${tags.includes(option) ? 'bg-[#003087] text-white' : 'text-slate-200 hover:bg-white/10'}`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="w-full min-h-0" style={{ height: 'calc(100vh - 148px)' }}>
           <FieldSVG />
         </div>
       </div>

@@ -39,11 +39,11 @@ export default function HomePage() {
   return (
     <main
       style={{ backgroundImage: "url('/sca-team-champs.jpg')" }}
-      className="relative min-h-screen bg-cover bg-center flex flex-col text-white"
+      className="relative h-screen overflow-hidden bg-cover bg-center text-white"
     >
       <div className="absolute inset-0 bg-gradient-to-b from-[#003087]/88 to-black/80" />
 
-      <div className="relative z-10 flex flex-col items-center justify-between h-screen px-6 py-8 text-center">
+      <div className="relative z-10 h-full flex flex-col items-center justify-between px-6 py-8 text-center">
         <div className="flex flex-col items-center gap-2 pt-4">
           <img src="/sca-logo.png" alt="SCA Eagles" className="h-20 w-20 object-contain md:h-28 md:w-28" />
           <h1 className="text-3xl font-black uppercase tracking-wide md:text-5xl">SCA Eagles Football</h1>
@@ -56,7 +56,7 @@ export default function HomePage() {
         </div>
 
         <div className="flex flex-col items-center gap-3 pb-4">
-          <Link href="/plays" className="text-white/60 text-sm hover:text-white/90 transition-colors mt-4">
+          <Link href="/plays" className="text-white/60 text-sm hover:text-white/90 transition-colors">
             Play Library →
           </Link>
           <p className="text-white/40 text-xs italic text-center">"Here am I. Send me!" — Isaiah 6:8</p>
@@ -65,3 +65,6 @@ export default function HomePage() {
     </main>
   );
 }
+
+
+

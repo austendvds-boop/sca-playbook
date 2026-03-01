@@ -1,18 +1,41 @@
 ﻿"use client";
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { DocumentRec, Play, PlayCardLayout, ReferenceLayout } from '@/lib/store';
+import { DocumentRec, Play, ReferenceLayout } from '@/lib/store';
 import { PlayCardTemplate } from '@/components/templates/PlayCardTemplate';
 import { ReferenceSheetTemplate } from '@/components/templates/ReferenceSheetTemplate';
+import { defaultPlayCardLayout, normalizePlayCardLayout } from '@/lib/installSheet';
 
 export default function DocEdit({ params }: { params: { id: string } }) {
   const [doc, setDoc] = useState<DocumentRec | null>(null);
   const [plays, setPlays] = useState<Play[]>([]);
   const [pickerIndex, setPickerIndex] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/documents/${params.id}`).then((r) => r.json()).then((d) => setDoc(d.data));
-    fetch('/api/plays').then((r) => r.json()).then((d) => setPlays(d.data || []));
+    fetch(`/api/documents/${params.id}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const fetched = d?.data as DocumentRec | null;
+        if (!fetched) {
+          setDoc(null);
+          setLoading(false);
+          return;
+        }
+
+        if (fetched.docType === 'play_card') {
+          setDoc({ ...fetched, layoutData: normalizePlayCardLayout(fetched.layoutData) });
+          setLoading(false);
+          return;
+        }
+
+        setDoc(fetched);
+        setLoading(false);
+      });
+
+    fetch('/api/plays')
+      .then((r) => r.json())
+      .then((d) => setPlays(d.data || []));
   }, [params.id]);
 
   useEffect(() => {
@@ -31,7 +54,7 @@ export default function DocEdit({ params }: { params: { id: string } }) {
 
   const selectPlayForSlot = (playId: string) => {
     if (!doc || doc.docType !== 'play_card' || pickerIndex === null) return;
-    const layout = doc.layoutData as PlayCardLayout;
+    const layout = normalizePlayCardLayout(doc.layoutData);
     const diagrams = [...layout.diagrams];
     const current = diagrams[pickerIndex];
     if (!current) return;
@@ -40,7 +63,13 @@ export default function DocEdit({ params }: { params: { id: string } }) {
     setPickerIndex(null);
   };
 
-  if (!doc) return <main className='p-6 text-[#003087] font-black uppercase'>Loading...</main>;
+  if (loading) {
+    return <main className='p-6 font-black uppercase text-[#003087]'>Loading...</main>;
+  }
+
+  if (!doc) {
+    return <main className='p-6 font-black uppercase text-[#003087]'>Install Sheet not found.</main>;
+  }
 
   return (
     <main className='mx-auto max-w-6xl space-y-3 p-4 md:p-6'>
@@ -64,7 +93,7 @@ export default function DocEdit({ params }: { params: { id: string } }) {
 
       {doc.docType === 'play_card' ? (
         <PlayCardTemplate
-          layout={doc.layoutData as PlayCardLayout}
+          layout={normalizePlayCardLayout(doc.layoutData || defaultPlayCardLayout)}
           playMap={playMap}
           onChange={(layoutData) => setDoc({ ...doc, layoutData })}
           onPickPlay={(index) => setPickerIndex(index)}
@@ -85,7 +114,7 @@ export default function DocEdit({ params }: { params: { id: string } }) {
 
             {plays.length === 0 ? (
               <div className='rounded border-2 border-[#003087] p-6 text-center'>
-                <p className='font-black uppercase text-[#003087]'>No plays yet. Go to Whiteboard to draw some.</p>
+                <p className='font-black uppercase text-[#003087]'>No plays yet — go to Whiteboard to draw some.</p>
                 <Link href='/plays/new' className='mt-3 inline-block rounded bg-[#CC0000] px-4 py-2 font-black uppercase text-white'>
                   Open Whiteboard
                 </Link>
@@ -93,19 +122,12 @@ export default function DocEdit({ params }: { params: { id: string } }) {
             ) : (
               <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
                 {plays.map((p) => (
-                  <button
-                    key={p.id}
-                    type='button'
-                    onClick={() => selectPlayForSlot(p.id)}
-                    className='rounded border-2 border-[#003087] p-3 text-left'
-                  >
+                  <button key={p.id} type='button' onClick={() => selectPlayForSlot(p.id)} className='rounded border-2 border-[#003087] p-3 text-left'>
                     <div className='mb-2 text-sm font-black uppercase text-[#003087]'>{p.name}</div>
                     {p.thumbnailSvg ? (
                       <div className='h-32 w-full overflow-hidden border-2 border-[#CC0000]' dangerouslySetInnerHTML={{ __html: p.thumbnailSvg }} />
                     ) : (
-                      <div className='flex h-32 items-center justify-center border-2 border-[#CC0000] text-xs font-black uppercase text-[#003087]'>
-                        No Thumbnail
-                      </div>
+                      <div className='flex h-32 items-center justify-center border-2 border-[#CC0000] text-xs font-black uppercase text-[#003087]'>No Thumbnail</div>
                     )}
                   </button>
                 ))}

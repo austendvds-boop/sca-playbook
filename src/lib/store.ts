@@ -1,4 +1,6 @@
-﻿export type Point = { x: number; y: number };
+﻿import { defaultPlayCardLayout } from '@/lib/installSheet';
+
+export type Point = { x: number; y: number };
 
 export type ElementType = 'player' | 'route' | 'block' | 'motion' | 'text' | 'zone';
 
@@ -98,26 +100,9 @@ export type DocumentRec = {
 };
 
 const defaultPlayCard = (): PlayCardLayout => ({
-  family: 'SCA',
-  concept: 'Base',
-  playName: 'New Install Sheet',
-  description: '',
-  diagrams: [{ key: 'diagram_1', playId: null, labelTop: '', labelBottom: '' }],
-  assignments: [
-    { position: 'QB', assignment: '' },
-    { position: 'RB', assignment: '' },
-    { position: 'FB', assignment: '' },
-    { position: 'WR (X)', assignment: '' },
-    { position: 'WR (Z)', assignment: '' },
-    { position: 'WR (H)', assignment: '' },
-    { position: 'TE (Y)', assignment: '' },
-    { position: 'LT', assignment: '' },
-    { position: 'LG', assignment: '' },
-    { position: 'C', assignment: '' },
-    { position: 'RG', assignment: '' },
-    { position: 'RT', assignment: '' }
-  ],
-  notes: ''
+  ...defaultPlayCardLayout,
+  diagrams: defaultPlayCardLayout.diagrams.map((diagram) => ({ ...diagram })),
+  assignments: defaultPlayCardLayout.assignments.map((row) => ({ ...row }))
 });
 
 const defaultRefSheet = (): ReferenceLayout => ({
@@ -172,6 +157,9 @@ if (!g.__scaStore) {
 
 export const store = g.__scaStore;
 export const makeDefaultDocLayout = (docType: 'play_card' | 'reference_sheet') => (docType === 'reference_sheet' ? defaultRefSheet() : defaultPlayCard());
+
+
+
 
 
 

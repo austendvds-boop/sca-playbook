@@ -2,8 +2,7 @@
 import { Play, PlayCardLayout } from '@/lib/store';
 import { EditableText } from '@/components/shared/EditableText';
 import { DiagramSlot } from './DiagramSlot';
-
-const defaultRows = ['QB', 'RB', 'FB', 'WR (X)', 'WR (Z)', 'WR (H)', 'TE (Y)', 'LT', 'LG', 'C', 'RG', 'RT'];
+import { defaultPlayCardLayout } from '@/lib/installSheet';
 
 export function PlayCardTemplate({
   layout,
@@ -16,11 +15,13 @@ export function PlayCardTemplate({
   onChange: (next: PlayCardLayout) => void;
   onPickPlay?: (diagramIndex: number) => void;
 }) {
-  const sourceRows = layout.assignments.length ? layout.assignments : defaultRows.map((position) => ({ position, assignment: '' }));
+  const sourceRows = layout.assignments.length
+    ? layout.assignments
+    : defaultPlayCardLayout.assignments.map((row) => ({ ...row }));
 
   const ensureSecondDiagram = () => {
     if (layout.diagrams.length >= 2) return layout.diagrams;
-    return [...layout.diagrams, { key: `diagram_${layout.diagrams.length + 1}`, playId: null, labelTop: '', labelBottom: '' }];
+    return [...layout.diagrams, { key: 'b', playId: null, labelTop: '', labelBottom: '' }];
   };
 
   return (
@@ -75,7 +76,7 @@ export function PlayCardTemplate({
             onClick={() => onChange({ ...layout, diagrams: ensureSecondDiagram() })}
             className="rounded bg-[#003087] px-3 py-2 text-sm font-black uppercase text-white"
           >
-            Add Second Diagram
+            Add second diagram +
           </button>
         ) : null}
       </div>
@@ -87,7 +88,7 @@ export function PlayCardTemplate({
           <div />
         </div>
         {sourceRows.map((r, i) => (
-          <div key={`${r.position}-${i}`} className="grid grid-cols-[170px_1fr_48px] border-t-2 border-[#003087] p-2 text-sm">
+          <div key={`${r.position}-${i}`} className="grid grid-cols-[170px_1fr_48px] border-t-2 border-[#003087] bg-white p-2 text-sm">
             <EditableText
               value={r.position}
               onSave={(v) => {
@@ -126,7 +127,7 @@ export function PlayCardTemplate({
           onClick={() => onChange({ ...layout, assignments: [...sourceRows, { position: 'NEW', assignment: '' }] })}
           className="rounded bg-[#CC0000] px-3 py-2 text-sm font-black uppercase text-white"
         >
-          Add Position
+          Add Position +
         </button>
       </div>
 
@@ -137,5 +138,4 @@ export function PlayCardTemplate({
     </div>
   );
 }
-
 

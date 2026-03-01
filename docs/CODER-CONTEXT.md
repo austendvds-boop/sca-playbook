@@ -100,3 +100,41 @@ Implemented and verified all requested fixes:
   - File touched: `src/components/templates/PlayCardTemplate.tsx`
 - New-play OL group spacing aligned with main whiteboard
   - File touched: `src/app/plays/new/page.tsx`
+
+## 2026-03-01 ChalkTalk fix-up pass (QA regressions)
+
+### Build status
+- Command: `npm run build`
+- Result: ✅ Success (zero errors)
+
+### Fixes implemented
+1. **More Options menu restored + ordered correctly**
+   - File: `src/components/canvas/CanvasToolbar.tsx`
+   - Menu now includes all required actions in order:
+     1) Mirror Play
+     2) Export PNG
+     3) Clear Canvas
+     4) Delete Play
+
+2. **Undo/Redo wiring hardened across canvas mutations**
+   - Files:
+     - `src/app/plays/[id]/page.tsx`
+     - `src/components/canvas/FieldSVG.tsx`
+   - Added consistent snapshot capture before mutations.
+   - Undo/redo now push current state to opposite stack when traversing history.
+   - Added max history depth cap of 50 entries.
+   - Snapshot cloning now deep-copies line points to avoid mutation bleed.
+
+3. **New Folder persistence + immediate dropdown update**
+   - File: `src/app/plays/page.tsx`
+   - `New Folder` prompt now trims input, POSTs to `/api/folders`, and appends returned folder directly to local `folders` state.
+   - Dropdown remains driven by `folders` state, so it updates immediately without reload.
+   - API route verified to include both seed + DB folders on GET:
+     - `src/app/api/folders/route.ts`
+
+### Files touched this pass
+- `src/components/canvas/CanvasToolbar.tsx`
+- `src/components/canvas/FieldSVG.tsx`
+- `src/app/plays/[id]/page.tsx`
+- `src/app/plays/page.tsx`
+- `docs/CODER-CONTEXT.md`

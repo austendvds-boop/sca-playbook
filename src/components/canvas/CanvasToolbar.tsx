@@ -210,8 +210,8 @@ export function CanvasToolbar({
           {menuOpen ? (
             <div className="absolute right-0 top-10 w-44 overflow-hidden rounded-md border border-white/10 bg-[#111125] shadow-xl">
               {onMirror ? <button onClick={() => { onMirror(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Mirror Play</button> : null}
-              {onClearCanvas ? <button onClick={() => { onClearCanvas(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Clear Canvas</button> : null}
               {onExportPng ? <button onClick={() => { onExportPng(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Export PNG</button> : null}
+              {onClearCanvas ? <button onClick={() => { onClearCanvas(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Clear Canvas</button> : null}
               {onDelete ? <button onClick={() => { onDelete(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-red-500/20">Delete Play</button> : null}
             </div>
           ) : null}

@@ -8,6 +8,7 @@ import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
 
 const FIELD_WIDTH = 1000;
 const FIELD_HEIGHT = 560;
+const MAX_HISTORY = 50;
 
 function pointFromClient(clientX: number, clientY: number, svg: SVGSVGElement): Point {
   const r = svg.getBoundingClientRect();
@@ -36,6 +37,17 @@ function lineElementFromTool(tool: 'route' | 'dashed_route' | 'tbar', points: Po
   return { id: uuid(), type: 'route', lineStyle: 'route', points, color: '#111' };
 }
 
+function cloneElement(el: CanvasElement): CanvasElement {
+  if (el.type === 'player') return { ...el };
+  if (el.type === 'text') return { ...el };
+  if (el.type === 'zone') return { ...el };
+  return { ...el, points: el.points.map((p) => ({ ...p })) };
+}
+
+function snapshotFromMap(map: Map<string, CanvasElement>) {
+  return [...map.values()].map(cloneElement);
+}
+
 export function FieldSVG() {
   const [tool, setTool] = useAtom(activeToolAtom);
   const [elements, setElements] = useAtom(elementsAtom);
@@ -52,7 +64,7 @@ export function FieldSVG() {
   const elementArr = useMemo(() => [...elements.values()], [elements]);
 
   const commit = (next: Map<string, CanvasElement>) => {
-    setUndo((prev) => [...prev, [...elements.values()]]);
+    setUndo((prev) => [...prev, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setRedo([]);
     setElements(next);
   };

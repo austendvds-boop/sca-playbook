@@ -33,10 +33,25 @@ export default function PlaysPage() {
   );
 
   const createFolder = async () => {
-    const name = window.prompt('Folder name', 'New Folder');
+    const input = window.prompt('Folder name', 'New Folder');
+    const name = input?.trim();
     if (!name) return;
-    await fetch('/api/folders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
-    load();
+
+    const res = await fetch('/api/folders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    });
+    if (!res.ok) return;
+
+    const payload = await res.json();
+    const folder = payload?.data as { id: string; name: string } | undefined;
+    if (!folder?.id) return;
+
+    setFolders((prev) => {
+      if (prev.some((f) => f.id === folder.id)) return prev;
+      return [...prev, folder].sort((a, b) => a.name.localeCompare(b.name));
+    });
   };
 
   return (

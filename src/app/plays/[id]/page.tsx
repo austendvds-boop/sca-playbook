@@ -11,6 +11,16 @@ import { CanvasElement } from '@/lib/store';
 
 const FIELD_CENTER = { x: 500, y: 320 };
 const TAG_OPTIONS = ['red_zone', 'goal_line', '3rd_down', '2_minute', 'general'];
+const MAX_HISTORY = 50;
+
+const cloneElement = (el: CanvasElement): CanvasElement => {
+  if (el.type === 'player') return { ...el };
+  if (el.type === 'text') return { ...el };
+  if (el.type === 'zone') return { ...el };
+  return { ...el, points: el.points.map((p) => ({ ...p })) };
+};
+
+const snapshotFromMap = (map: Map<string, CanvasElement>) => [...map.values()].map(cloneElement);
 
 export default function PlayEdit({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -24,7 +34,7 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   const router = useRouter();
 
   const applyCanvasChange = (updater: (prev: Map<string, CanvasElement>) => Map<string, CanvasElement>) => {
-    setUndo((prev) => [...prev, [...elements.values()]]);
+    setUndo((prev) => [...prev, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setRedo([]);
     setElements((prev) => updater(prev));
   };
@@ -185,18 +195,18 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
 
   const handleUndo = () => {
     if (undoStack.length === 0) return;
-    const prev = undoStack[undoStack.length - 1];
+    const prev = undoStack[undoStack.length - 1].map(cloneElement);
     setUndo((stack) => stack.slice(0, -1));
-    setRedo((stack) => [...stack, [...elements.values()]]);
+    setRedo((stack) => [...stack, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setElements(new Map(prev.map((el) => [el.id, el])));
     setSelected(new Set());
   };
 
   const handleRedo = () => {
     if (redoStack.length === 0) return;
-    const next = redoStack[redoStack.length - 1];
+    const next = redoStack[redoStack.length - 1].map(cloneElement);
     setRedo((stack) => stack.slice(0, -1));
-    setUndo((stack) => [...stack, [...elements.values()]]);
+    setUndo((stack) => [...stack, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setElements(new Map(next.map((el) => [el.id, el])));
     setSelected(new Set());
   };

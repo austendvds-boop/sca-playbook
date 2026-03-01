@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import { useAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
 import { v4 as uuid } from 'uuid';
@@ -11,7 +11,8 @@ import { CanvasElement } from '@/lib/store';
 
 const FIELD_CENTER = { x: 500, y: 280 };
 
-export default function PlayEdit({ params }: { params: { id: string } }) {
+export default function PlayEdit({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [elements, setElements] = useAtom(elementsAtom);
   const [selected, setSelected] = useAtom(selectedIdsAtom);
   const [undoStack, setUndo] = useAtom(undoStackAtom);
@@ -20,7 +21,7 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
   const router = useRouter();
 
   useEffect(() => {
-    fetch(`/api/plays/${params.id}`)
+    fetch(`/api/plays/${id}`)
       .then((r) => r.json())
       .then((d) => {
         const map = new Map<string, CanvasElement>();
@@ -31,7 +32,7 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
         setRedo([]);
         setName(d.data?.name ?? 'Play');
       });
-  }, [params.id, setElements, setSelected, setUndo, setRedo]);
+  }, [id, setElements, setSelected, setUndo, setRedo]);
 
   const offensePresetNames = useMemo(() => offensePresets.map((p) => p.name), []);
   const defensePresetNames = useMemo(() => defensePresets.map((p) => p.name), []);
@@ -39,7 +40,7 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
   const save = async () => {
     const svg = document.querySelector('svg');
     const thumbnailSvg = svg ? new XMLSerializer().serializeToString(svg) : '';
-    await fetch(`/api/plays/${params.id}`, {
+    await fetch(`/api/plays/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, canvasData: [...elements.values()], thumbnailSvg })
@@ -77,7 +78,7 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
   };
 
   const mirror = async () => {
-    await fetch(`/api/plays/${params.id}/duplicate`, {
+    await fetch(`/api/plays/${id}/duplicate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mirror: true })
@@ -85,7 +86,7 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
   };
 
   const removePlay = async () => {
-    await fetch(`/api/plays/${params.id}`, { method: 'DELETE' });
+    await fetch(`/api/plays/${id}`, { method: 'DELETE' });
     router.push('/plays');
   };
 

@@ -1,19 +1,20 @@
 ﻿"use client";
-import { useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { DocumentRec, Play, ReferenceLayout } from '@/lib/store';
 import { PlayCardTemplate } from '@/components/templates/PlayCardTemplate';
 import { ReferenceSheetTemplate } from '@/components/templates/ReferenceSheetTemplate';
 import { defaultPlayCardLayout, normalizePlayCardLayout } from '@/lib/installSheet';
 
-export default function DocEdit({ params }: { params: { id: string } }) {
+export default function DocEdit({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [doc, setDoc] = useState<DocumentRec | null>(null);
   const [plays, setPlays] = useState<Play[]>([]);
   const [pickerIndex, setPickerIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/documents/${params.id}`)
+    fetch(`/api/documents/${id}`)
       .then((r) => r.json())
       .then((d) => {
         const fetched = d?.data as DocumentRec | null;
@@ -36,19 +37,19 @@ export default function DocEdit({ params }: { params: { id: string } }) {
     fetch('/api/plays')
       .then((r) => r.json())
       .then((d) => setPlays(d.data || []));
-  }, [params.id]);
+  }, [id]);
 
   useEffect(() => {
     if (!doc) return;
     const t = setTimeout(() => {
-      fetch(`/api/documents/${params.id}`, {
+      fetch(`/api/documents/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(doc)
       });
     }, 2000);
     return () => clearTimeout(t);
-  }, [doc, params.id]);
+  }, [doc, id]);
 
   const playMap = useMemo(() => new Map(plays.map((p) => [p.id, p])), [plays]);
 
@@ -78,7 +79,7 @@ export default function DocEdit({ params }: { params: { id: string } }) {
           <button
             className='rounded bg-[#003087] px-3 py-2 font-black uppercase text-white'
             onClick={() =>
-              fetch(`/api/documents/${params.id}`, {
+              fetch(`/api/documents/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(doc)
@@ -87,7 +88,7 @@ export default function DocEdit({ params }: { params: { id: string } }) {
           >
             Save
           </button>
-          <button className='rounded border-2 border-[#003087] px-3 py-2 font-black uppercase text-[#003087]' onClick={() => window.open(`/documents/${params.id}/print`, '_blank')}>
+          <button className='rounded border-2 border-[#003087] px-3 py-2 font-black uppercase text-[#003087]' onClick={() => window.open(`/documents/${id}/print`, '_blank')}>
             Print
           </button>
         </div>

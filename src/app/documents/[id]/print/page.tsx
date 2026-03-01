@@ -1,18 +1,19 @@
 ﻿"use client";
-import { useEffect, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useState } from 'react';
 import { DocumentRec, Play } from '@/lib/store';
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
 import { normalizePlayCardLayout } from '@/lib/installSheet';
 
-export default function PrintDoc({ params }: { params: { id: string } }) {
+export default function PrintDoc({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [doc, setDoc] = useState<DocumentRec | null>(null);
   const [plays, setPlays] = useState<Play[]>([]);
 
   useEffect(() => {
-    fetch(`/api/documents/${params.id}`).then((r) => r.json()).then((d) => setDoc(d.data));
+    fetch(`/api/documents/${id}`).then((r) => r.json()).then((d) => setDoc(d.data));
     fetch('/api/plays').then((r) => r.json()).then((d) => setPlays(d.data || []));
     setTimeout(() => window.print(), 450);
-  }, [params.id]);
+  }, [id]);
 
   const playMap = useMemo(() => new Map(plays.map((p) => [p.id, p])), [plays]);
 

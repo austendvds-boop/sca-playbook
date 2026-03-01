@@ -2,8 +2,8 @@
 import { useAtom } from 'jotai';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
-import { activeToolAtom, elementsAtom, selectedIdsAtom, undoStackAtom, redoStackAtom, viewportAtom } from '@/atoms/canvas';
-import { CanvasElement, Point } from '@/lib/store';
+import { activeToolAtom, elementsAtom, selectedIdsAtom, undoStackAtom, redoStackAtom, viewportAtom, Tool } from '@/atoms/canvas';
+import { CanvasElement, LineElement, Point } from '@/lib/store';
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
 
 const FIELD_WIDTH = 1000;
@@ -18,6 +18,31 @@ function svgPoint(evt: React.PointerEvent<SVGSVGElement>): Point {
   return pointFromClient(evt.clientX, evt.clientY, evt.currentTarget);
 }
 
+function isLineTool(tool: Tool): tool is 'route' | 'dashed_route' | 'zigzag' | 'tbar' {
+  return tool === 'route' || tool === 'dashed_route' || tool === 'zigzag' || tool === 'tbar';
+}
+
+function simplifyPoints(points: Point[]): Point[] {
+  if (points.length <= 3) return points;
+  const out: Point[] = [points[0]];
+  for (let i = 1; i < points.length - 1; i += 3) out.push(points[i]);
+  out.push(points[points.length - 1]);
+  return out;
+}
+
+function lineElementFromTool(tool: 'route' | 'dashed_route' | 'zigzag' | 'tbar', points: Point[]): LineElement {
+  if (tool === 'dashed_route') {
+    return { id: uuid(), type: 'motion', lineStyle: 'dashed_route', points, color: '#111' };
+  }
+  if (tool === 'zigzag') {
+    return { id: uuid(), type: 'block', lineStyle: 'zigzag', points, color: '#111' };
+  }
+  if (tool === 'tbar') {
+    return { id: uuid(), type: 'block', lineStyle: 'tbar', points, color: '#111' };
+  }
+  return { id: uuid(), type: 'route', lineStyle: 'route', points, color: '#111' };
+}
+
 export function FieldSVG() {
   const [tool, setTool] = useAtom(activeToolAtom);
   const [elements, setElements] = useAtom(elementsAtom);
@@ -27,6 +52,8 @@ export function FieldSVG() {
   const [viewport, setViewport] = useAtom(viewportAtom);
   const draftRef = useRef<Point[]>([]);
   const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
+  const freehandRef = useRef<Point[]>([]);
+  const isDrawingRef = useRef(false);
   const [preview, setPreview] = useState<Point[]>([]);
   const [draggingPlayer, setDraggingPlayer] = useState<{ id: string; x: number; y: number } | null>(null);
 
@@ -39,13 +66,33 @@ export function FieldSVG() {
     setElements(next);
   };
 
+  const startFreehand = (evt: React.PointerEvent<SVGSVGElement> | React.PointerEvent<SVGElement>, startPoint: Point) => {
+    const svg = evt.currentTarget instanceof SVGSVGElement ? evt.currentTarget : evt.currentTarget.ownerSVGElement;
+    if (!svg) return;
+    svg.setPointerCapture(evt.pointerId);
+    isDrawingRef.current = true;
+    freehandRef.current = [startPoint];
+    setPreview([startPoint]);
+  };
+
+  const commitFreehand = (points: Point[]) => {
+    if (!isLineTool(tool)) return;
+    const simplified = simplifyPoints(points);
+    if (simplified.length < 2) return;
+    const next = new Map(elements);
+    const line = lineElementFromTool(tool, simplified);
+    next.set(line.id, line);
+    commit(next);
+    setSelected(new Set([line.id]));
+  };
+
   useEffect(() => {
     const onKey = (evt: KeyboardEvent) => {
       const key = evt.key.toLowerCase();
       if (key === 'v') setTool('select');
       if (key === 'a') setTool('route');
-      if (key === 'b') setTool('block');
-      if (key === 'm') setTool('motion');
+      if (key === 'b') setTool('zigzag');
+      if (key === 'm') setTool('dashed_route');
       if (key === 't') setTool('text');
       if (key === 'z') setTool('zone');
       if (evt.key === 'Delete' && selected.size > 0) {
@@ -87,8 +134,18 @@ export function FieldSVG() {
       setDraggingPlayer({ id: dragRef.current.id, x: p.x - dragRef.current.dx, y: p.y - dragRef.current.dy });
       return;
     }
-    if (tool === 'route' || tool === 'block' || tool === 'motion' || tool === 'zone') {
-      if (draftRef.current.length > 0) setPreview([...draftRef.current, p]);
+    if (isDrawingRef.current) {
+      const last = freehandRef.current[freehandRef.current.length - 1];
+      const dx = p.x - last.x;
+      const dy = p.y - last.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 4) {
+        freehandRef.current = [...freehandRef.current, p];
+        setPreview([...freehandRef.current]);
+      }
+      return;
+    }
+    if (tool === 'zone' && draftRef.current.length > 0) {
+      setPreview([...draftRef.current, p]);
     }
   };
 
@@ -105,14 +162,23 @@ export function FieldSVG() {
       setDraggingPlayer(null);
       return;
     }
-    if (tool === 'route' || tool === 'block' || tool === 'motion') {
-      draftRef.current = [...draftRef.current, p];
+    if (isDrawingRef.current) {
+      const last = freehandRef.current[freehandRef.current.length - 1];
+      const dx = p.x - last.x;
+      const dy = p.y - last.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 1) {
+        freehandRef.current = [...freehandRef.current, p];
+      }
+      commitFreehand(freehandRef.current);
+      isDrawingRef.current = false;
+      freehandRef.current = [];
+      setPreview([]);
     }
   };
 
   const onDoubleClick = () => {
-    if ((tool === 'route' || tool === 'block' || tool === 'motion') && draftRef.current.length > 1) {
-      const el: CanvasElement = { id: uuid(), type: tool, points: [...draftRef.current], color: '#e2e8f0', lineType: tool === 'motion' ? 'dashed' : 'solid' };
+    if (tool === 'zone' && draftRef.current.length > 2) {
+      const el: CanvasElement = { id: uuid(), type: 'zone', points: [...draftRef.current], color: '#60a5fa', opacity: 0.22 };
       commit(new Map(elements).set(el.id, el));
       draftRef.current = [];
       setPreview([]);
@@ -134,6 +200,10 @@ export function FieldSVG() {
         onCanvasDoubleClick={onDoubleClick}
         onPlayerPointerDown={(id, evt, x, y) => {
           evt.stopPropagation();
+          if (isLineTool(tool)) {
+            startFreehand(evt, { x, y });
+            return;
+          }
           if (tool === 'select') {
             const svg = evt.currentTarget.ownerSVGElement;
             if (!svg) return;
@@ -147,6 +217,10 @@ export function FieldSVG() {
         onBackgroundPointerDown={(evt) => {
           if (evt.pointerType === 'touch' && evt.isPrimary === false) {
             setViewport({ ...viewport, x: viewport.x + 3, y: viewport.y + 3 });
+          }
+          if (isLineTool(tool)) {
+            startFreehand(evt, svgPoint(evt));
+            return;
           }
           if (tool === 'select') setSelected(new Set());
         }}

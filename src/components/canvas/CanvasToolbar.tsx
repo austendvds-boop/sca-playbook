@@ -4,11 +4,8 @@ import { useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
-  ChevronsRight,
   Hexagon,
   MousePointer2,
-  MoveRight,
-  MoreHorizontal,
   MoreVertical,
   Save,
   Trash2,
@@ -28,11 +25,48 @@ type PresetButton = {
   side: 'offense' | 'defense';
 };
 
+function RouteIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 16" fill="none" aria-hidden="true">
+      <path d="M2 14 Q11 2 18 8" stroke="currentColor" strokeWidth="2" />
+      <path d="M17 5 L22 8 L16 10" stroke="currentColor" strokeWidth="2" fill="none" />
+    </svg>
+  );
+}
+
+function DashedRouteIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 16" fill="none" aria-hidden="true">
+      <path d="M2 14 Q11 2 18 8" stroke="currentColor" strokeWidth="2" strokeDasharray="4 3" />
+      <path d="M17 5 L22 8 L16 10" stroke="currentColor" strokeWidth="2" fill="none" />
+    </svg>
+  );
+}
+
+function ZigzagIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 16" fill="none" aria-hidden="true">
+      <path d="M2 8 L6 3 L10 13 L14 3 L18 13 L22 8" stroke="currentColor" strokeWidth="2" />
+      <path d="M20 5 L23 8 L19 10" stroke="currentColor" strokeWidth="2" fill="none" />
+    </svg>
+  );
+}
+
+function TBarIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 16" fill="none" aria-hidden="true">
+      <path d="M2 13 Q10 4 19 8" stroke="currentColor" strokeWidth="2" />
+      <line x1="20" y1="3" x2="20" y2="13" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
 const tools: { key: Tool; label: string; shortcut: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { key: 'select', label: 'Select', shortcut: 'V', icon: MousePointer2 },
-  { key: 'route', label: 'Route', shortcut: 'A', icon: MoveRight },
-  { key: 'block', label: 'Block', shortcut: 'B', icon: ChevronsRight },
-  { key: 'motion', label: 'Motion', shortcut: 'M', icon: MoreHorizontal },
+  { key: 'route', label: 'Route', shortcut: 'A', icon: RouteIcon },
+  { key: 'dashed_route', label: 'Motion', shortcut: 'M', icon: DashedRouteIcon },
+  { key: 'zigzag', label: 'Block', shortcut: 'B', icon: ZigzagIcon },
+  { key: 'tbar', label: 'T-Bar', shortcut: 'R', icon: TBarIcon },
   { key: 'text', label: 'Text', shortcut: 'T', icon: Type },
   { key: 'zone', label: 'Zone', shortcut: 'Z', icon: Hexagon }
 ];

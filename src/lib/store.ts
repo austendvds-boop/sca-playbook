@@ -17,7 +17,7 @@ export type LineElement = {
   type: 'route' | 'block' | 'motion';
   points: Point[];
   color: string;
-  lineType?: 'solid' | 'dashed';
+  lineStyle: 'route' | 'zigzag' | 'tbar' | 'dashed_route';
   fromPlayerId?: string;
 };
 
@@ -139,7 +139,7 @@ const samplePlay = (id: string, name: string, offset = 0): Play => ({
     { id: `${id}-c`, type: 'player', x: 400 + offset, y: 340, position: 'C', side: 'offense' },
     { id: `${id}-qb`, type: 'player', x: 400 + offset, y: 390, position: 'QB', side: 'offense' },
     { id: `${id}-x`, type: 'player', x: 180 + offset, y: 260, position: 'X', side: 'offense' },
-    { id: `${id}-r1`, type: 'route', points: [{ x: 180 + offset, y: 260 }, { x: 180 + offset, y: 130 }], color: '#111827' }
+    { id: `${id}-r1`, type: 'route', points: [{ x: 180 + offset, y: 260 }, { x: 180 + offset, y: 130 }], color: '#111827', lineStyle: 'route' }
   ],
   updatedAt: new Date().toISOString()
 });
@@ -170,3 +170,5 @@ if (!g.__scaStore) {
 
 export const store = g.__scaStore;
 export const makeDefaultDocLayout = (docType: 'play_card' | 'reference_sheet') => (docType === 'reference_sheet' ? defaultRefSheet() : defaultPlayCard());
+
+

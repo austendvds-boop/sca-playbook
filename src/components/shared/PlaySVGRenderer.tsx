@@ -1,5 +1,5 @@
 "use client";
-import { CanvasElement, Point } from '@/lib/store';
+import { CanvasElement, LineElement, Point } from '@/lib/store';
 import { FieldBackground } from '@/components/canvas/FieldBackground';
 
 type Props = {
@@ -18,14 +18,83 @@ type Props = {
   onBackgroundPointerDown?: (evt: React.PointerEvent<SVGSVGElement>) => void;
 };
 
-const pathData = (points: Point[]) => points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+function smoothPath(points: Point[]): string {
+  if (points.length < 2) return '';
+  if (points.length === 2) return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length - 1; i += 1) {
+    const cp2x = (points[i].x + points[i + 1].x) / 2;
+    const cp2y = (points[i].y + points[i + 1].y) / 2;
+    d += ` Q ${points[i].x} ${points[i].y} ${cp2x} ${cp2y}`;
+  }
+  const last = points[points.length - 1];
+  d += ` L ${last.x} ${last.y}`;
+  return d;
+}
+
+function zigzagPath(points: Point[]): string {
+  if (points.length < 2) return '';
+  const start = points[0];
+  const end = points[points.length - 1];
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) return '';
+
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  const period = 12;
+  const amp = 7;
+  const steps = Math.max(4, Math.floor(len / period));
+
+  let d = `M ${start.x} ${start.y}`;
+  for (let i = 1; i <= steps; i += 1) {
+    const t = i / steps;
+    const cx = start.x + dx * t;
+    const cy = start.y + dy * t;
+    const side = i % 2 === 0 ? 1 : -1;
+    d += ` L ${cx + px * amp * side} ${cy + py * amp * side}`;
+  }
+  d += ` L ${end.x} ${end.y}`;
+  return d;
+}
+
+function resolveLineStyle(el: LineElement): 'route' | 'dashed_route' | 'zigzag' | 'tbar' {
+  if (el.lineStyle) return el.lineStyle;
+  if (el.type === 'motion') return 'dashed_route';
+  return 'route';
+}
+
+function tBarData(points: Point[]): { x1: number; y1: number; x2: number; y2: number } | null {
+  if (points.length < 2) return null;
+  const last = points[points.length - 1];
+  const prev = points[points.length - 2] ?? points[0];
+  const dx = last.x - prev.x;
+  const dy = last.y - prev.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len === 0) return null;
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  const barLen = 12;
+
+  return {
+    x1: last.x - px * barLen,
+    y1: last.y - py * barLen,
+    x2: last.x + px * barLen,
+    y2: last.y + py * barLen
+  };
+}
 
 export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onBackgroundPointerDown }: Props) {
   return (
     <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
       <defs>
-        <marker id="arrow-open" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#e2e8f0" /></marker>
-        <marker id="arrow-filled" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e2e8f0" /></marker>
+        <marker id="arrow-open" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#111" /></marker>
       </defs>
       <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`}>
         <FieldBackground />
@@ -49,11 +118,27 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
           }
           if (el.type === 'text') return <text key={el.id} x={el.x} y={el.y} fontSize={el.fontSize ?? 16} fill={el.color ?? '#f1f5f9'}>{el.text}</text>;
           if (el.type === 'zone') return <polygon key={el.id} points={el.points.map((p) => `${p.x},${p.y}`).join(' ')} fill={el.color} opacity={el.opacity} />;
-          const marker = el.type === 'block' ? 'url(#arrow-filled)' : 'url(#arrow-open)';
-          return <path key={el.id} d={pathData(el.points)} fill="none" stroke={el.color ?? '#e2e8f0'} strokeWidth={3} strokeDasharray={el.type === 'motion' || el.lineType === 'dashed' ? '8 6' : undefined} markerEnd={marker} />;
+
+          const lineStyle = resolveLineStyle(el);
+          const d = lineStyle === 'zigzag' ? zigzagPath(el.points) : smoothPath(el.points);
+          const tbar = lineStyle === 'tbar' ? tBarData(el.points) : null;
+          const stroke = '#111';
+          return (
+            <g key={el.id}>
+              <path
+                d={d}
+                fill="none"
+                stroke={stroke}
+                strokeWidth={2.5}
+                strokeDasharray={lineStyle === 'dashed_route' ? '8 5' : undefined}
+                markerEnd={lineStyle === 'tbar' ? undefined : 'url(#arrow-open)'}
+              />
+              {tbar ? <line x1={tbar.x1} y1={tbar.y1} x2={tbar.x2} y2={tbar.y2} stroke={stroke} strokeWidth={2.5} /> : null}
+            </g>
+          );
         })}
 
-        {previewPath && previewPath.length > 1 ? <path d={pathData(previewPath)} fill="none" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={2} /> : null}
+        {previewPath && previewPath.length > 1 ? <path d={smoothPath(previewPath)} fill="none" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={2} /> : null}
       </g>
     </svg>
   );

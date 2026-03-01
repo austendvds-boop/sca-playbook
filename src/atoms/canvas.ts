@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { CanvasElement } from '@/lib/store';
 
-export type Tool = 'select' | 'player' | 'route' | 'block' | 'motion' | 'text' | 'zone';
+export type Tool = 'select' | 'player' | 'route' | 'dashed_route' | 'zigzag' | 'tbar' | 'text' | 'zone';
 export type FieldType = 'half' | 'full' | 'redzone';
 
 export const elementsAtom = atom<Map<string, CanvasElement>>(new Map());

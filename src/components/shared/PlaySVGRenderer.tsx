@@ -1,5 +1,6 @@
 "use client";
 import { CanvasElement, Point } from '@/lib/store';
+import { FieldBackground } from '@/components/canvas/FieldBackground';
 
 type Props = {
   elements: CanvasElement[];
@@ -26,11 +27,7 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
         <marker id="arrow-filled" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#111827" /></marker>
       </defs>
       <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`}>
-        <rect x="0" y="0" width="800" height="600" fill="#1f7a3c" />
-        <rect x="0" y="0" width="800" height="600" fill="none" stroke="#ffffff" strokeWidth="4" />
-        {[...Array(13)].map((_, i) => <line key={i} x1={i * (800 / 12)} y1={0} x2={i * (800 / 12)} y2={600} stroke="#ffffff" opacity={0.45} />)}
-        {[120, 180, 420, 480].map((y) => <line key={y} x1={0} y1={y} x2={800} y2={y} stroke="#ffffff" opacity={0.25} />)}
-        <rect x="0" y="0" width="80" height="600" fill="#14532d" opacity={0.75} />
+        <FieldBackground />
 
         {elements.map((el) => {
           if (el.type === 'player') {

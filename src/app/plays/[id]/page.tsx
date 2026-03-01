@@ -252,35 +252,14 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
           onRedo={handleRedo}
           canUndo={undoStack.length > 0}
           canRedo={redoStack.length > 0}
+          tags={tags}
+          onToggleTag={(t) => void toggleTag(t)}
+          onToggleTagPicker={() => setTagPickerOpen((v) => !v)}
+          tagPickerOpen={tagPickerOpen}
+          tagOptions={TAG_OPTIONS}
         />
 
-        <div className="no-print flex items-center gap-2 border-t border-white/10 bg-[#0E1022] px-3 py-2">
-          <span className="text-xs uppercase tracking-wide text-slate-300">Tags</span>
-          {tags.map((tag) => (
-            <button key={tag} onClick={() => void toggleTag(tag)} className="rounded bg-[#003087] px-2 py-1 text-xs text-white">
-              {tag} ×
-            </button>
-          ))}
-          <div className="relative">
-            <button onClick={() => setTagPickerOpen((v) => !v)} className="rounded border border-white/30 px-2 py-1 text-xs">+
-            </button>
-            {tagPickerOpen ? (
-              <div className="absolute left-0 top-8 z-40 w-40 rounded border border-white/10 bg-[#111125] p-1">
-                {TAG_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => void toggleTag(option)}
-                    className={`block w-full rounded px-2 py-1 text-left text-xs ${tags.includes(option) ? 'bg-[#003087] text-white' : 'text-slate-200 hover:bg-white/10'}`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="w-full min-h-0" style={{ height: 'calc(100vh - 148px)' }}>
+        <div className="w-full min-h-0" style={{ height: 'calc(100vh - 104px)' }}>
           <FieldSVG />
         </div>
       </div>

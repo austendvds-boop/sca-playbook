@@ -1,4 +1,6 @@
-﻿import Link from 'next/link';
+"use client";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 function ModeIcon({ kind }: { kind: 'whiteboard' | 'documents' }) {
   if (kind === 'whiteboard') {
@@ -22,7 +24,7 @@ function ModeCard({ href, title, description, kind, red }: { href: string; title
   return (
     <Link
       href={href}
-      className={`group flex min-h-[140px] w-full flex-col justify-between rounded-xl p-4 text-left shadow-2xl transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white md:min-h-[160px] md:p-5 ${
+      className={`group flex min-h-[140px] w-full cursor-pointer flex-col justify-between rounded-xl p-4 text-left shadow-2xl transition-transform duration-150 hover:-translate-y-1 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white md:min-h-[160px] md:p-5 ${
         red ? 'bg-[#CC0000] text-white' : 'bg-white text-[#003087]'
       }`}
     >
@@ -36,6 +38,14 @@ function ModeCard({ href, title, description, kind, red }: { href: string; title
 }
 
 export default function HomePage() {
+  const [playCount, setPlayCount] = useState(0);
+  const [docCount, setDocCount] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/plays').then((r) => r.json()).then((d) => setPlayCount((d.data || []).length)).catch(() => undefined);
+    fetch('/api/documents').then((r) => r.json()).then((d) => setDocCount((d.data || []).length)).catch(() => undefined);
+  }, []);
+
   return (
     <main
       style={{ backgroundImage: "url('/sca-team-champs.jpg')" }}
@@ -43,28 +53,29 @@ export default function HomePage() {
     >
       <div className="absolute inset-0 bg-gradient-to-b from-[#003087]/88 to-black/80" />
 
-      <div className="relative z-10 h-full flex flex-col items-center justify-between px-6 py-8 text-center">
+      <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 py-8 text-center">
         <div className="flex flex-col items-center gap-2 pt-4">
           <img src="/sca-logo.png" alt="SCA Eagles" className="h-20 w-20 object-contain md:h-28 md:w-28" />
           <h1 className="text-3xl font-black uppercase tracking-wide md:text-5xl">SCA Eagles Football</h1>
           <p className="text-2xl font-extrabold tracking-[0.1em] text-[#CC0000] md:text-3xl">ChalkTalk</p>
         </div>
 
-        <div className="flex flex-col gap-4 w-full max-w-md">
+        <div className="flex w-full max-w-md flex-col gap-4">
           <ModeCard href="/plays/new" title="Whiteboard" description="Draw and diagram plays" kind="whiteboard" red />
           <ModeCard href="/documents" title="Install Sheets" description="Build teaching documents" kind="documents" />
+          <div className="mt-6 flex gap-6 text-sm text-white/60">
+            <span>{playCount} plays</span>
+            <span>{docCount} install sheets</span>
+          </div>
         </div>
 
         <div className="flex flex-col items-center gap-3 pb-4">
-          <Link href="/plays" className="text-white/60 text-sm hover:text-white/90 transition-colors">
+          <Link href="/plays" className="rounded border border-white/40 px-4 py-2 text-white/80 transition hover:bg-white/10">
             Play Library →
           </Link>
-          <p className="text-white/40 text-xs italic text-center">"Here am I. Send me!" — Isaiah 6:8</p>
+          <p className="text-center text-xs italic text-white/40">"Here am I. Send me!" — Isaiah 6:8</p>
         </div>
       </div>
     </main>
   );
 }
-
-
-

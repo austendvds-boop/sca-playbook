@@ -1,4 +1,4 @@
-﻿import type { PlayCardLayout } from '@/lib/store';
+import type { PlayCardLayout } from '@/lib/store';
 
 export const defaultPlayCardLayout: PlayCardLayout = {
   family: '',
@@ -6,8 +6,8 @@ export const defaultPlayCardLayout: PlayCardLayout = {
   playName: '',
   description: '',
   diagrams: [
-    { key: 'a', playId: null, labelTop: '', labelBottom: '' },
-    { key: 'b', playId: null, labelTop: '', labelBottom: '' }
+    { key: 'a', playId: null, labelTop: 'LABEL', labelBottom: '' },
+    { key: 'b', playId: null, labelTop: 'LABEL', labelBottom: '' }
   ],
   assignments: [
     { position: 'PST', assignment: '' },
@@ -22,7 +22,9 @@ export const defaultPlayCardLayout: PlayCardLayout = {
     { position: 'A', assignment: '' },
     { position: 'QB', assignment: '' }
   ],
-  notes: ''
+  notes: '',
+  slot1Label: 'LABEL',
+  slot2Label: 'LABEL'
 };
 
 export function normalizePlayCardLayout(input: unknown): PlayCardLayout {
@@ -38,17 +40,20 @@ export function normalizePlayCardLayout(input: unknown): PlayCardLayout {
         }))
     : [];
 
+  const normalizedDiagrams = diagrams.length > 0 ? diagrams : defaultPlayCardLayout.diagrams.map((d) => ({ ...d }));
+
   return {
     family: raw.family ?? defaultPlayCardLayout.family,
     concept: raw.concept ?? defaultPlayCardLayout.concept,
     playName: raw.playName ?? defaultPlayCardLayout.playName,
     description: raw.description ?? defaultPlayCardLayout.description,
-    diagrams: diagrams.length > 0 ? diagrams : defaultPlayCardLayout.diagrams.map((d) => ({ ...d })),
+    diagrams: normalizedDiagrams,
     assignments:
       Array.isArray(raw.assignments) && raw.assignments.length > 0
         ? raw.assignments.map((row) => ({ position: row.position ?? '', assignment: row.assignment ?? '' }))
         : defaultPlayCardLayout.assignments.map((r) => ({ ...r })),
-    notes: raw.notes ?? defaultPlayCardLayout.notes
+    notes: raw.notes ?? defaultPlayCardLayout.notes,
+    slot1Label: raw.slot1Label ?? normalizedDiagrams[0]?.labelTop ?? 'LABEL',
+    slot2Label: raw.slot2Label ?? normalizedDiagrams[1]?.labelTop ?? 'LABEL'
   };
 }
-

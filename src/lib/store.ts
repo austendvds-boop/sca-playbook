@@ -77,6 +77,8 @@ export type PlayCardLayout = {
   diagrams: DiagramSlot[];
   assignments: AssignmentRow[];
   notes: string;
+  slot1Label?: string;
+  slot2Label?: string;
 };
 
 export type ReferenceRow = {

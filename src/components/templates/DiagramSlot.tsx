@@ -24,7 +24,7 @@ export function DiagramSlot({
 }) {
   return (
     <div className='relative rounded border-2 border-[#003087] p-3'>
-      <EditableText value={labelTop} onSave={onLabelTop} placeholder='label' className='mb-2 text-sm font-extrabold uppercase text-[#003087]' />
+      <EditableText value={labelTop} onSave={onLabelTop} placeholder='LABEL' className='mb-2 text-sm font-extrabold uppercase text-[#003087]' />
 
       {play ? (
         <PlaySVGRenderer elements={play.canvasData} className='h-64 w-full' />

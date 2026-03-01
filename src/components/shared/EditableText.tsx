@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useRef, useState } from 'react';
 
 export function EditableText({
@@ -6,13 +6,15 @@ export function EditableText({
   onSave,
   className,
   multiline,
-  placeholder
+  placeholder,
+  placeholderClassName
 }: {
   value: string;
   onSave: (v: string) => void;
   className?: string;
   multiline?: boolean;
   placeholder?: string;
+  placeholderClassName?: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -36,7 +38,7 @@ export function EditableText({
   if (!editing) {
     return (
       <div className={className} onClick={() => setEditing(true)} role='button' tabIndex={0} onKeyDown={(e) => (e.key === 'Enter' ? setEditing(true) : null)}>
-        {value || placeholder || ' '}
+        {value ? value : <span className={placeholderClassName}>{placeholder || ' '}</span>}
       </div>
     );
   }
@@ -69,4 +71,3 @@ export function EditableText({
     </div>
   );
 }
-

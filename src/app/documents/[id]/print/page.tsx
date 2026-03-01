@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { use, useEffect, useMemo, useState } from 'react';
 import { DocumentRec, Play } from '@/lib/store';
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
@@ -12,12 +12,12 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
   useEffect(() => {
     fetch(`/api/documents/${id}`).then((r) => r.json()).then((d) => setDoc(d.data));
     fetch('/api/plays').then((r) => r.json()).then((d) => setPlays(d.data || []));
-    setTimeout(() => window.print(), 450);
   }, [id]);
 
   const playMap = useMemo(() => new Map(plays.map((p) => [p.id, p])), [plays]);
 
-  if (!doc || doc.docType !== 'play_card') return null;
+  if (!doc) return <main className='p-5 text-[#003087]'>Loading...</main>;
+  if (doc.docType !== 'play_card') return <main className='p-5 text-[#003087]'>Unsupported document.</main>;
 
   const layout = normalizePlayCardLayout(doc.layoutData);
   const diagrams = layout.diagrams.slice(0, 2);
@@ -32,6 +32,12 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
           [contenteditable='true'] { outline: none !important; }
         }
       `}</style>
+
+      <div className='no-print mb-3 flex justify-end'>
+        <button onClick={() => window.print()} className='rounded border border-[#003087] px-3 py-1.5 text-sm font-semibold text-[#003087] hover:bg-[#003087]/5'>
+          Print
+        </button>
+      </div>
 
       <header className='mb-3 flex items-center justify-between bg-[#003087] px-4 py-3 text-white'>
         <img src='/sca-logo.png' alt='SCA Eagles' className='h-12 w-12 object-contain' />
@@ -51,7 +57,7 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
           const play = diagram.playId ? playMap.get(diagram.playId) : undefined;
           return (
             <div key={diagram.key} className={i === 0 ? 'border-r-2 border-[#003087] p-2' : 'p-2'}>
-              <div className='mb-1 text-xs font-black'>{diagram.labelTop || ' '}</div>
+              <div className='mb-1 text-xs font-black'>{(i === 0 ? layout.slot1Label : layout.slot2Label) || diagram.labelTop || ' '}</div>
               <div className='h-48 border border-[#003087]'>
                 {play ? <PlaySVGRenderer elements={play.canvasData} className='h-full w-full' /> : <div className='flex h-full items-center justify-center text-sm font-bold'>No Play</div>}
               </div>
@@ -75,7 +81,7 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
 
       <section>
         <div className='mb-1 text-xs font-black'>NOTES</div>
-        <div className='min-h-20 border-2 border-[#003087] p-2 text-sm'>{layout.notes || ' '}</div>
+        <div className='min-h-[120px] border-2 border-[#003087] p-2 text-sm'>{layout.notes || ' '}</div>
       </section>
 
       <footer className='mt-5 border-t-2 border-[#003087] pt-2 text-center'>
@@ -84,4 +90,3 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
     </main>
   );
 }
-

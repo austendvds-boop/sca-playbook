@@ -4,17 +4,17 @@ export function FieldBackground() {
   const LOS = 320;
 
   const yardMarkers = [
-    { y: LOS - 40, label: '5' },
-    { y: LOS - 80, label: '10' },
-    { y: LOS - 120, label: '15' },
-    { y: LOS - 160, label: '20' },
-    { y: LOS + 40, label: '5' },
-    { y: LOS + 80, label: '10' }
+    { y: LOS - 40, label: '5 yd' },
+    { y: LOS - 80, label: '10 yd' },
+    { y: LOS - 120, label: '15 yd' },
+    { y: LOS - 160, label: '20 yd' },
+    { y: LOS + 40, label: '5 yd' },
+    { y: LOS + 80, label: '10 yd' }
   ];
 
   return (
     <>
-      <rect x={0} y={0} width={W} height={H} fill="#FFFFFF" />
+      <rect x={0} y={0} width={W} height={H} fill="#f7fdf7" />
       <rect x={0} y={0} width={W} height={60} fill="#F3F4F6" />
       <rect x={0} y={H - 60} width={W} height={60} fill="#F3F4F6" />
 
@@ -24,7 +24,7 @@ export function FieldBackground() {
       {yardMarkers.map((m) => (
         <g key={`${m.label}-${m.y}`}>
           <line x1={20} y1={m.y} x2={980} y2={m.y} stroke="rgba(0,0,0,0.15)" strokeWidth={1} />
-          <text x={28} y={m.y - 4} fontSize={10} fontWeight="600" fill="rgba(0,0,0,0.45)" fontFamily="sans-serif">
+          <text x={28} y={m.y - 4} fontSize={9} fontWeight="500" fill="rgba(0,0,0,0.3)" fontFamily="sans-serif">
             {m.label}
           </text>
         </g>

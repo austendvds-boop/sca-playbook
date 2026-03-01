@@ -76,7 +76,10 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
   return (
     <main className='h-[100dvh] overflow-hidden p-3 md:p-4'>
       <div className='mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden'>
-        <div className='no-print flex shrink-0 gap-2'>
+        <div className='no-print flex shrink-0 items-center gap-2'>
+          <Link href='/documents' className='rounded border border-[#003087] px-3 py-2 text-sm font-black uppercase text-[#003087]'>
+            &lt; Install Sheets
+          </Link>
           <button
             className='rounded bg-[#003087] px-3 py-2 font-black uppercase text-white'
             onClick={() =>

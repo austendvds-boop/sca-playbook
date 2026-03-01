@@ -17,6 +17,7 @@ type Props = {
   onPlayerPointerDown?: (id: string, evt: React.PointerEvent<SVGElement>, x: number, y: number) => void;
   onLinePointerDown?: (id: string, evt: React.PointerEvent<SVGElement>) => void;
   onBackgroundPointerDown?: (evt: React.PointerEvent<SVGSVGElement>) => void;
+  viewBox?: string;
 };
 
 function smoothPath(points: Point[]): string {
@@ -91,9 +92,9 @@ function tBarData(points: Point[]): { x1: number; y1: number; x2: number; y2: nu
   };
 }
 
-export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onLinePointerDown, onBackgroundPointerDown }: Props) {
+export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onLinePointerDown, onBackgroundPointerDown, viewBox = '0 0 1000 560' }: Props) {
   return (
-    <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
+    <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
       <defs>
         {/* Small open arrowhead - thin V tip */}
         <marker

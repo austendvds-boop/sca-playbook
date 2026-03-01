@@ -194,3 +194,50 @@ Implemented and verified all requested fixes:
 - `src/app/plays/[id]/page.tsx`
 - `src/app/plays/page.tsx`
 - `docs/CODER-CONTEXT.md`
+## 2026-03-01 ChalkTalk UI polish batch (21 items)
+
+### Build status
+- Command: `npm run build`
+- Result: ? Success (zero TS errors)
+
+### Completed fixes
+- Print page no longer auto-calls `window.print`; added explicit Print button and loading fallback.
+- OL Group spawn verified in both edit/new pages: LT/LG/C/RG/RT at x 420/460/500/540/580, y=320.
+- Play library:
+  - Thumbnail zoom via `PlaySVGRenderer viewBox="0 260 1000 200"`
+  - Tag pills on cards
+  - Custom folder dropdown (popover)
+  - Heading count badge (`{filteredPlays.length} plays`)
+  - Empty state for no results
+- Whiteboard:
+  - Tags moved into top navy header bar (row removed)
+  - OL button includes `OL` label
+  - Tool hit targets increased to `px-3 py-2`, icons `h-5 w-5`
+  - Field tint changed to `#f7fdf7`
+  - Yard labels now `5 yd`, `10 yd`, etc. with 9px/light style
+  - Player bar grouped with vertical separators; RB/FB darker red (`#AA0000`)
+- Install sheet:
+  - Diagram labels editable with default `LABEL`, persisted to `slot1Label` and `slot2Label`
+  - Assignment placeholders now `Click to add assignment` (light gray italic)
+  - NOTES min-height increased to 120px
+  - Back nav now points to `/documents` and text is `< INSTALL SHEETS`
+  - CONCEPT placeholder now `e.g. Power, Counter`
+- Home page:
+  - Added live stat row (`playCount`, `docCount`) from `/api/plays` + `/api/documents`
+  - `Play Library ?` restyled as ghost button
+  - Mode cards use lift hover animation (`hover:-translate-y-1 hover:shadow-xl`)
+
+### Files touched
+- `src/app/documents/[id]/print/page.tsx`
+- `src/app/plays/[id]/page.tsx`
+- `src/app/plays/page.tsx`
+- `src/components/shared/PlaySVGRenderer.tsx`
+- `src/components/canvas/CanvasToolbar.tsx`
+- `src/components/canvas/FieldBackground.tsx`
+- `src/components/templates/PlayCardTemplate.tsx`
+- `src/components/templates/DiagramSlot.tsx`
+- `src/components/shared/EditableText.tsx`
+- `src/lib/installSheet.ts`
+- `src/lib/store.ts`
+- `src/app/documents/[id]/page.tsx`
+- `src/app/page.tsx`

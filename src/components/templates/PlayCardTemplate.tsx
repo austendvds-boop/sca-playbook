@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { Play, PlayCardLayout } from '@/lib/store';
 import { EditableText } from '@/components/shared/EditableText';
 import { DiagramSlot } from './DiagramSlot';
@@ -33,11 +33,11 @@ export function PlayCardTemplate({
         </div>
         <div className='px-3 py-2'>
           <span className='mr-1 font-black'>CONCEPT:</span>
-          <EditableText value={layout.concept} placeholder='________' onSave={(concept) => onChange({ ...layout, concept })} className='inline min-h-6' />
+          <EditableText value={layout.concept} placeholder='e.g. Power, Counter' onSave={(concept) => onChange({ ...layout, concept })} className='inline min-h-6' placeholderClassName='text-white/70' />
         </div>
         <div className='px-3 py-2'>
           <span className='mr-1 font-black'>SITUATION:</span>
-          <EditableText value={layout.description} placeholder='e.g. 2nd & 8, +40' onSave={(description) => onChange({ ...layout, description })} className='inline min-h-6' />
+          <EditableText value={layout.description} placeholder='e.g. 2nd & 8, +40' onSave={(description) => onChange({ ...layout, description })} className='inline min-h-6' placeholderClassName='text-white/70' />
         </div>
       </div>
 
@@ -51,10 +51,14 @@ export function PlayCardTemplate({
           <div key={d.key} className={i === 0 ? 'border-b-2 border-[#003087] md:border-b-0 md:border-r-2' : ''}>
             <DiagramSlot
               play={d.playId ? playMap.get(d.playId) : undefined}
-              labelTop={d.labelTop}
+              labelTop={i === 0 ? (layout.slot1Label ?? d.labelTop) : (layout.slot2Label ?? d.labelTop)}
               labelBottom={d.labelBottom}
               showBottomLabel={false}
-              onLabelTop={(v) => patchDiagram(i, { labelTop: v })}
+              onLabelTop={(v) => {
+                const nextDiagrams = [...diagrams];
+                nextDiagrams[i] = { ...nextDiagrams[i], labelTop: v };
+                onChange({ ...layout, diagrams: nextDiagrams, [i === 0 ? 'slot1Label' : 'slot2Label']: v });
+              }}
               onLabelBottom={(v) => patchDiagram(i, { labelBottom: v })}
               onRemove={() => patchDiagram(i, { playId: null })}
               onAddPlay={() => onPickPlay?.(i)}
@@ -73,7 +77,8 @@ export function PlayCardTemplate({
             <div className='font-black text-[#003087]'>{row.position}</div>
             <EditableText
               value={row.assignment}
-              placeholder=''
+              placeholder='Click to add assignment'
+              placeholderClassName='italic text-gray-400'
               onSave={(assignment) => {
                 const next = [...assignments];
                 next[i] = { ...next[i], assignment };
@@ -91,10 +96,9 @@ export function PlayCardTemplate({
           value={layout.notes}
           onSave={(notes) => onChange({ ...layout, notes })}
           multiline
-          className='min-h-20 w-full border border-[#003087] p-2 text-sm font-semibold text-[#003087]'
+          className='min-h-[120px] w-full border border-[#003087] p-2 text-sm font-semibold text-[#003087]'
         />
       </div>
     </div>
   );
 }
-

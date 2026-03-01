@@ -56,20 +56,39 @@ export default function DocumentsPage() {
       </div>
 
       <div className='min-h-0 flex-1 overflow-auto pb-2'>
-        <div className='grid gap-3 pr-1'>
-          {docs.map((d) => {
-            const assignedPlayId = d.layoutData?.diagrams?.find((x) => x.playId)?.playId ?? null;
-            const assignedPlayName = assignedPlayId ? playMap.get(assignedPlayId) : null;
-            return (
-              <Link key={d.id} href={`/documents/${d.id}`} className='rounded border-2 border-[#003087] bg-white p-3'>
-                <div className='text-lg font-black uppercase text-[#003087]'>{d.name}</div>
-                <div className='text-sm font-bold uppercase text-[#CC0000]'>{assignedPlayName ? `Play: ${assignedPlayName}` : 'Play: Not assigned'}</div>
-              </Link>
-            );
-          })}
-        </div>
+        {docs.length === 0 ? (
+          <div className='flex flex-col items-center justify-center gap-4 px-6 text-center py-8'>
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <ellipse cx="32" cy="32" rx="20" ry="12" stroke="#003087" strokeWidth="3" />
+              <line x1="32" y1="20" x2="32" y2="44" stroke="#003087" strokeWidth="2" />
+              <line x1="22" y1="28" x2="42" y2="28" stroke="#003087" strokeWidth="2" />
+              <line x1="24" y1="32" x2="40" y2="32" stroke="#003087" strokeWidth="2" />
+              <line x1="22" y1="36" x2="42" y2="36" stroke="#003087" strokeWidth="2" />
+            </svg>
+            <h2 className='text-xl font-bold text-[#003087]'>No install sheets yet</h2>
+            <p className='text-sm text-gray-500'>Create your first install sheet to start building your playbook</p>
+            <button
+              onClick={() => createDoc('play_card')}
+              className='rounded-lg bg-[#CC0000] px-6 py-3 text-lg font-bold text-white'
+            >
+              + New Install Sheet
+            </button>
+          </div>
+        ) : (
+          <div className='grid gap-3 pr-1'>
+            {docs.map((d) => {
+              const assignedPlayId = d.layoutData?.diagrams?.find((x) => x.playId)?.playId ?? null;
+              const assignedPlayName = assignedPlayId ? playMap.get(assignedPlayId) : null;
+              return (
+                <Link key={d.id} href={`/documents/${d.id}`} className='rounded border-2 border-[#003087] bg-white p-3'>
+                  <div className='text-lg font-black uppercase text-[#003087]'>{d.name}</div>
+                  <div className='text-sm font-bold uppercase text-[#CC0000]'>{assignedPlayName ? `Play: ${assignedPlayName}` : 'Play: Not assigned'}</div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </main>
   );
 }
-

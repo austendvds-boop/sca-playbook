@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-function TopNavLink({ href, label }: { href: string; label: string }) {
+function TopNavLink({ href, label }: { href: string; label: React.ReactNode }) {
   return (
     <Link href={href} className="text-sm font-extrabold uppercase tracking-wide text-white hover:underline">
       {label}
@@ -28,7 +28,17 @@ export function ConditionalNav() {
       </div>
 
       <div className="flex items-center gap-4 md:gap-6">
-        <TopNavLink href="/" label="? Home" />
+        <TopNavLink
+          href="/"
+          label={
+            <span className="inline-flex items-center gap-1">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span>Home</span>
+            </span>
+          }
+        />
 
         {isPlayRoute ? (
           <>
@@ -47,4 +57,3 @@ export function ConditionalNav() {
     </nav>
   );
 }
-

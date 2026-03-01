@@ -123,7 +123,7 @@ export function FieldSVG() {
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-none bg-[#0f1022]">
+    <div className="relative h-full w-full overflow-hidden rounded-none bg-gray-100">
       <PlaySVGRenderer
         elements={elementArr}
         className="h-full w-full"
@@ -155,3 +155,4 @@ export function FieldSVG() {
     </div>
   );
 }
+

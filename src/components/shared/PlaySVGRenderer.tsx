@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { CanvasElement, LineElement, Point } from '@/lib/store';
 import { FieldBackground } from '@/components/canvas/FieldBackground';
 
@@ -7,7 +7,6 @@ type Props = {
   className?: string;
   viewport?: { x: number; y: number; zoom: number };
   previewPath?: Point[];
-  zonePreview?: { cx: number; cy: number; rx: number; ry: number } | null;
   selectedIds?: Set<string>;
   touchActionNone?: boolean;
   draggingPlayer?: { id: string; x: number; y: number };
@@ -92,7 +91,7 @@ function tBarData(points: Point[]): { x1: number; y1: number; x2: number; y2: nu
   };
 }
 
-export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, zonePreview, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onLinePointerDown, onBackgroundPointerDown }: Props) {
+export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onLinePointerDown, onBackgroundPointerDown }: Props) {
   return (
     <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
       <defs>
@@ -174,22 +173,10 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
           );
         })}
 
-        {previewPath && previewPath.length > 1 ? <path d={smoothPath(previewPath)} fill="none" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={2} /> : null}
-        {zonePreview ? (
-          <ellipse
-            cx={zonePreview.cx}
-            cy={zonePreview.cy}
-            rx={zonePreview.rx}
-            ry={zonePreview.ry}
-            fill="rgba(59,130,246,0.15)"
-            stroke="#3b82f6"
-            strokeDasharray="4 3"
-            strokeWidth={1.5}
-          />
-        ) : null}
-      </g>
+        {previewPath && previewPath.length > 1 ? <path d={smoothPath(previewPath)} fill="none" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={2} /> : null}      </g>
     </svg>
   );
 }
+
 
 

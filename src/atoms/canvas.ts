@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { CanvasElement } from '@/lib/store';
 
-export type Tool = 'select' | 'player' | 'route' | 'dashed_route' | 'zigzag' | 'tbar' | 'text' | 'zone';
+export type Tool = 'select' | 'player' | 'route' | 'dashed_route' | 'tbar' | 'zone';
 export type FieldType = 'half' | 'full' | 'redzone';
 
 export const elementsAtom = atom<Map<string, CanvasElement>>(new Map());
@@ -11,3 +11,4 @@ export const fieldTypeAtom = atom<FieldType>('half');
 export const viewportAtom = atom({ x: 0, y: 0, zoom: 1 });
 export const undoStackAtom = atom<CanvasElement[][]>([]);
 export const redoStackAtom = atom<CanvasElement[][]>([]);
+

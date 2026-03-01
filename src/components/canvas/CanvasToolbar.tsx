@@ -9,7 +9,6 @@ import {
   MoreVertical,
   Save,
   Trash2,
-  Type,
   Undo2,
   Redo2
 } from 'lucide-react';
@@ -45,15 +44,6 @@ function DashedRouteIcon({ className }: { className?: string }) {
   );
 }
 
-function ZigzagIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 16" fill="none" aria-hidden="true">
-      <path d="M2 8 L6 3 L10 13 L14 3 L18 13 L22 8" stroke="currentColor" strokeWidth="2" />
-      <path d="M20 5 L23 8 L19 10" stroke="currentColor" strokeWidth="2" fill="none" />
-    </svg>
-  );
-}
-
 function TBarIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 16" fill="none" aria-hidden="true">
@@ -67,9 +57,7 @@ const tools: { key: Tool; label: string; shortcut: string; icon: React.Component
   { key: 'select', label: 'Select', shortcut: 'V', icon: MousePointer2 },
   { key: 'route', label: 'Route', shortcut: 'A', icon: RouteIcon },
   { key: 'dashed_route', label: 'Motion', shortcut: 'M', icon: DashedRouteIcon },
-  { key: 'zigzag', label: 'Block', shortcut: 'B', icon: ZigzagIcon },
-  { key: 'tbar', label: 'T-Bar', shortcut: 'R', icon: TBarIcon },
-  { key: 'text', label: 'Text', shortcut: 'T', icon: Type },
+  { key: 'tbar', label: 'Block', shortcut: 'R', icon: TBarIcon },
   { key: 'zone', label: 'Zone', shortcut: 'Z', icon: Hexagon }
 ];
 
@@ -318,3 +306,4 @@ export function CanvasToolbar({
     </>
   );
 }
+

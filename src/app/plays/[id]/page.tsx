@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { v4 as uuid } from 'uuid';
 import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
 import { FieldSVG } from '@/components/canvas/FieldSVG';
-import { elementsAtom, selectedIdsAtom } from '@/atoms/canvas';
+import { elementsAtom, selectedIdsAtom, undoStackAtom, redoStackAtom } from '@/atoms/canvas';
 import { offensePresets, defensePresets } from '@/lib/presets';
 import { CanvasElement } from '@/lib/store';
 
@@ -14,6 +14,8 @@ const FIELD_CENTER = { x: 500, y: 280 };
 export default function PlayEdit({ params }: { params: { id: string } }) {
   const [elements, setElements] = useAtom(elementsAtom);
   const [selected, setSelected] = useAtom(selectedIdsAtom);
+  const [undoStack, setUndo] = useAtom(undoStackAtom);
+  const [redoStack, setRedo] = useAtom(redoStackAtom);
   const [name, setName] = useState('Play');
   const router = useRouter();
 
@@ -25,9 +27,11 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
         (d.data?.canvasData ?? []).forEach((e: CanvasElement) => map.set(e.id, e));
         setElements(map);
         setSelected(new Set());
+        setUndo([]);
+        setRedo([]);
         setName(d.data?.name ?? 'Play');
       });
-  }, [params.id, setElements, setSelected]);
+  }, [params.id, setElements, setSelected, setUndo, setRedo]);
 
   const offensePresetNames = useMemo(() => offensePresets.map((p) => p.name), []);
   const defensePresetNames = useMemo(() => defensePresets.map((p) => p.name), []);
@@ -111,6 +115,23 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
     const source = side === 'offense' ? offensePresets : defensePresets;
     const preset = source.find((p) => p.name === presetName);
     if (!preset) return;
+
+    if (side === 'defense') {
+      const confirmed = window.confirm(`Start a new play with ${preset.name} defense?`);
+      if (!confirmed) return;
+      setElements(new Map());
+      setSelected(new Set());
+      setUndo([]);
+      setRedo([]);
+      const next = new Map<string, CanvasElement>();
+      preset.elements.forEach((el) => {
+        const id = uuid();
+        next.set(id, el.type === 'player' ? { ...el, id, side: 'defense' } : { ...el, id });
+      });
+      setElements(next);
+      return;
+    }
+
     if (elements.size > 0) {
       const confirmed = window.confirm(`Replace current play with ${presetName}?`);
       if (!confirmed) return;
@@ -121,6 +142,24 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
       next.set(id, { ...el, id });
     });
     setElements(next);
+    setSelected(new Set());
+  };
+
+  const handleUndo = () => {
+    if (undoStack.length === 0) return;
+    const prev = undoStack[undoStack.length - 1];
+    setUndo(undoStack.slice(0, -1));
+    setRedo([...redoStack, [...elements.values()]]);
+    setElements(new Map(prev.map((el) => [el.id, el])));
+    setSelected(new Set());
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length === 0) return;
+    const next = redoStack[redoStack.length - 1];
+    setRedo(redoStack.slice(0, -1));
+    setUndo([...undoStack, [...elements.values()]]);
+    setElements(new Map(next.map((el) => [el.id, el])));
     setSelected(new Set());
   };
 
@@ -151,6 +190,10 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
           offensePresetNames={offensePresetNames}
           defensePresetNames={defensePresetNames}
           onDeleteSelected={deleteSelected}
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={undoStack.length > 0}
+          canRedo={redoStack.length > 0}
         />
         <div className="flex-1 w-full min-h-0">
           <FieldSVG />

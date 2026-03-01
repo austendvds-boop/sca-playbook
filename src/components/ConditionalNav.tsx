@@ -20,6 +20,9 @@ export function ConditionalNav() {
       </div>
       <Link href="/plays" className="mr-6 text-sm font-medium text-white opacity-90 hover:opacity-100">My Plays</Link>
       <Link href="/documents" className="text-sm font-medium text-white opacity-90 hover:opacity-100">Documents</Link>
+      <span className="hidden sm:block italic text-white text-xs opacity-60 ml-auto pr-2">
+        Isaiah 6:8
+      </span>
     </nav>
   );
 }

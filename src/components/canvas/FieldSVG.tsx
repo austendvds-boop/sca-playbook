@@ -214,6 +214,12 @@ export function FieldSVG() {
           }
         }}
         selectedIds={selected}
+        onLinePointerDown={(id, evt) => {
+          evt.stopPropagation();
+          if (tool === 'select') {
+            setSelected(new Set([id]));
+          }
+        }}
         onBackgroundPointerDown={(evt) => {
           if (evt.pointerType === 'touch' && evt.isPrimary === false) {
             setViewport({ ...viewport, x: viewport.x + 3, y: viewport.y + 3 });

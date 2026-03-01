@@ -9,7 +9,9 @@ import {
   MoreVertical,
   Save,
   Trash2,
-  Type
+  Type,
+  Undo2,
+  Redo2
 } from 'lucide-react';
 import { activeToolAtom, Tool } from '@/atoms/canvas';
 
@@ -129,7 +131,11 @@ export function CanvasToolbar({
   onApplyPreset,
   offensePresetNames,
   defensePresetNames,
-  onDeleteSelected
+  onDeleteSelected,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo
 }: {
   name: string;
   onNameChange: (next: string) => void;
@@ -144,6 +150,10 @@ export function CanvasToolbar({
   offensePresetNames: string[];
   defensePresetNames: string[];
   onDeleteSelected: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }) {
   const [active, setActive] = useAtom(activeToolAtom);
   const [activeTab, setActiveTab] = useState<DrawerTab>('offense');
@@ -201,6 +211,12 @@ export function CanvasToolbar({
         </div>
 
         <div className="relative flex items-center gap-1">
+          <button onClick={onUndo} disabled={!canUndo} className="p-1.5 rounded disabled:opacity-30 text-white hover:bg-white/10" aria-label="Undo">
+            <Undo2 className="w-4 h-4" />
+          </button>
+          <button onClick={onRedo} disabled={!canRedo} className="p-1.5 rounded disabled:opacity-30 text-white hover:bg-white/10" aria-label="Redo">
+            <Redo2 className="w-4 h-4" />
+          </button>
           <button onClick={onSave} className="rounded-md p-2 text-[#CC0000] hover:bg-white/10" aria-label="Save play">
             <Save className="h-4 w-4" />
           </button>

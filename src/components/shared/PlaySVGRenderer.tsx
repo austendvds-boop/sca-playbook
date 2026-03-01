@@ -95,7 +95,7 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
   return (
     <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
       <defs>
-        <marker id="arrow-open" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#111" /></marker>
+        <marker id="arrow-open" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#111111" /></marker>
       </defs>
       <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`}>
         <FieldBackground />

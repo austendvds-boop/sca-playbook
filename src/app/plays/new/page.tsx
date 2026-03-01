@@ -14,7 +14,7 @@ const FIELD_CENTER = { x: 500, y: 280 };
 export default function NewPlay() {
   const [name, setName] = useState('New Play');
   const [elements, setElements] = useAtom(elementsAtom);
-  const [, setSelected] = useAtom(selectedIdsAtom);
+  const [selected, setSelected] = useAtom(selectedIdsAtom);
   const router = useRouter();
 
   useEffect(() => {
@@ -46,18 +46,22 @@ export default function NewPlay() {
     const preset = source.find((p) => p.name === presetName);
     if (!preset) return;
     const next = new Map<string, CanvasElement>();
-    preset.elements.forEach((el) => next.set(uuid(), { ...el, id: uuid() }));
+    preset.elements.forEach((el) => {
+      const id = uuid();
+      next.set(id, { ...el, id });
+    });
     setElements(next);
     setSelected(new Set());
   };
 
   const deleteSelected = () => {
+    if (selected.size === 0) return;
     setElements((prev) => {
       const next = new Map(prev);
-      const ids = [...next.keys()].slice(-1);
-      ids.forEach((id) => next.delete(id));
+      selected.forEach((id) => next.delete(id));
       return next;
     });
+    setSelected(new Set());
   };
 
   return (
@@ -79,5 +83,3 @@ export default function NewPlay() {
     </main>
   );
 }
-
-

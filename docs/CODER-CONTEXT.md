@@ -138,3 +138,31 @@ Implemented and verified all requested fixes:
 - `src/app/plays/[id]/page.tsx`
 - `src/app/plays/page.tsx`
 - `docs/CODER-CONTEXT.md`
+
+## 2026-03-01 ChalkTalk final 2-issue fix pass
+
+### Build status
+- Command: `npm run build`
+- Result: ✅ Success (zero errors)
+
+### Fixes implemented
+1. **More Options consolidated to one wired dropdown**
+   - Files:
+     - `src/app/plays/[id]/page.tsx`
+     - `src/components/canvas/CanvasToolbar.tsx`
+     - `src/app/plays/new/page.tsx`
+   - Moved menu action rendering/ordering control into play edit page and left only a single `⋮` toggle surface in toolbar.
+   - Dropdown now renders in required order: Mirror Play, Export PNG, Clear Canvas, Delete Play.
+   - Dropdown container uses `overflow-visible` to avoid clipping.
+   - `Mirror Play` now mirrors all x coordinates (`1000 - x`) including line points **and then saves** via PUT.
+   - `Clear Canvas` keeps undo stack behavior via existing `applyCanvasChange` flow.
+
+2. **New Folder persistence and immediate UI update verified/fixed**
+   - File: `src/app/plays/page.tsx`
+   - New Folder flow already used prompt -> POST `/api/folders` -> append returned folder to `folders` state, with dropdown bound to `folders` state.
+   - Confirmed initial `GET /api/folders` runs on mount via `load()` and hydrates `folders` state.
+   - API persistence path confirmed in `src/app/api/folders/route.ts` (GET merges seed + DB folders; POST returns created folder in response).
+
+### Notes
+- `src/app/plays/new/page.tsx` updated to satisfy `CanvasToolbar` prop signature after menu ownership change.
+- Non-blocking Next.js lockfile warning remains unchanged.

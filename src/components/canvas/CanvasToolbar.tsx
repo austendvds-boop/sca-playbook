@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtom } from 'jotai';
-import { useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Hexagon,
@@ -111,10 +111,9 @@ export function CanvasToolbar({
   onNameChange,
   onBack,
   onSave,
-  onDelete,
-  onExportPng,
-  onMirror,
-  onClearCanvas,
+  moreMenuOpen,
+  onToggleMoreMenu,
+  moreMenu,
   onInsertPlayer,
   onInsertOLGroup,
   onApplyPreset,
@@ -130,10 +129,9 @@ export function CanvasToolbar({
   onNameChange: (next: string) => void;
   onBack: () => void;
   onSave: () => void;
-  onDelete?: () => void;
-  onExportPng?: () => void;
-  onMirror?: () => void;
-  onClearCanvas?: () => void;
+  moreMenuOpen: boolean;
+  onToggleMoreMenu: () => void;
+  moreMenu?: ReactNode;
   onInsertPlayer: (token: PlayerToken) => void;
   onInsertOLGroup: () => void;
   onApplyPreset: (presetName: string, side: 'offense' | 'defense') => void;
@@ -147,7 +145,6 @@ export function CanvasToolbar({
 }) {
   const [active, setActive] = useAtom(activeToolAtom);
   const [activeTab, setActiveTab] = useState<DrawerTab>('offense');
-  const [menuOpen, setMenuOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(name);
 
@@ -204,17 +201,10 @@ export function CanvasToolbar({
 <button onClick={onSave} className="rounded-md p-2 text-[#CC0000] hover:bg-white/10" aria-label="Save play">
             <Save className="h-4 w-4" />
           </button>
-          <button onClick={() => setMenuOpen((v) => !v)} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="More options">
+          <button onClick={onToggleMoreMenu} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="More options">
             <MoreVertical className="h-4 w-4" />
           </button>
-          {menuOpen ? (
-            <div className="absolute right-0 top-10 w-44 overflow-hidden rounded-md border border-white/10 bg-[#111125] shadow-xl">
-              {onMirror ? <button onClick={() => { onMirror(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Mirror Play</button> : null}
-              {onExportPng ? <button onClick={() => { onExportPng(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Export PNG</button> : null}
-              {onClearCanvas ? <button onClick={() => { onClearCanvas(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Clear Canvas</button> : null}
-              {onDelete ? <button onClick={() => { onDelete(); setMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-red-500/20">Delete Play</button> : null}
-            </div>
-          ) : null}
+          {moreMenuOpen ? moreMenu : null}
         </div>
       </header>
 

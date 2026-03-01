@@ -31,6 +31,7 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   const [name, setName] = useState('Play');
   const [tags, setTags] = useState<string[]>(['general']);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const router = useRouter();
 
   const applyCanvasChange = (updater: (prev: Map<string, CanvasElement>) => Map<string, CanvasElement>) => {
@@ -68,13 +69,13 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   const offensePresetNames = useMemo(() => offensePresets.map((p) => p.name), []);
   const defensePresetNames = useMemo(() => defensePresets.map((p) => p.name), []);
 
-  const save = async () => {
+  const save = async (canvasDataOverride?: CanvasElement[]) => {
     const svg = document.querySelector('svg');
     const thumbnailSvg = svg ? new XMLSerializer().serializeToString(svg) : '';
     await fetch(`/api/plays/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, tags, canvasData: [...elements.values()], thumbnailSvg })
+      body: JSON.stringify({ name, tags, canvasData: canvasDataOverride ?? [...elements.values()], thumbnailSvg })
     });
   };
 
@@ -128,17 +129,19 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
     img.src = url;
   };
 
-  const mirror = () => {
-    applyCanvasChange((prev) => {
-      const next = new Map<string, CanvasElement>();
-      prev.forEach((e) => {
-        if (e.type === 'player') next.set(e.id, { ...e, x: 1000 - e.x });
-        else if (e.type === 'text') next.set(e.id, { ...e, x: 1000 - e.x });
-        else if (e.type === 'zone') next.set(e.id, { ...e, cx: 1000 - e.cx });
-        else next.set(e.id, { ...e, points: e.points.map((p) => ({ x: 1000 - p.x, y: p.y })) });
-      });
-      return next;
+  const mirror = async () => {
+    const next = new Map<string, CanvasElement>();
+    elements.forEach((e) => {
+      if (e.type === 'player') next.set(e.id, { ...e, x: 1000 - e.x });
+      else if (e.type === 'text') next.set(e.id, { ...e, x: 1000 - e.x });
+      else if (e.type === 'zone') next.set(e.id, { ...e, cx: 1000 - e.cx });
+      else next.set(e.id, { ...e, points: e.points.map((p) => ({ x: 1000 - p.x, y: p.y })) });
     });
+
+    setUndo((prev) => [...prev, snapshotFromMap(elements)].slice(-MAX_HISTORY));
+    setRedo([]);
+    setElements(next);
+    await save([...next.values()]);
   };
 
   const clearCanvas = () => {
@@ -228,11 +231,17 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
           name={name}
           onNameChange={(next) => void renamePlay(next)}
           onBack={() => router.push('/plays')}
-          onSave={save}
-          onDelete={removePlay}
-          onExportPng={exportPng}
-          onMirror={mirror}
-          onClearCanvas={clearCanvas}
+          onSave={() => void save()}
+          moreMenuOpen={moreMenuOpen}
+          onToggleMoreMenu={() => setMoreMenuOpen((v) => !v)}
+          moreMenu={(
+            <div className="absolute right-0 top-10 z-50 w-44 overflow-visible rounded-md border border-white/10 bg-[#111125] shadow-xl">
+              <button onClick={() => { void mirror(); setMoreMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Mirror Play</button>
+              <button onClick={() => { void exportPng(); setMoreMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Export PNG</button>
+              <button onClick={() => { clearCanvas(); setMoreMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Clear Canvas</button>
+              <button onClick={() => { void removePlay(); setMoreMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-red-300 hover:bg-red-500/20">Delete Play</button>
+            </div>
+          )}
           onInsertPlayer={insertPlayer}
           onInsertOLGroup={insertOLGroup}
           onApplyPreset={applyPreset}

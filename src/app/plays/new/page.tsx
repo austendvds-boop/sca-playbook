@@ -130,7 +130,9 @@ export default function NewPlay() {
           name={name}
           onNameChange={setName}
           onBack={() => router.push('/plays')}
-          onSave={save}
+          onSave={() => void save()}
+          moreMenuOpen={false}
+          onToggleMoreMenu={() => undefined}
           onInsertPlayer={insertPlayer}
           onInsertOLGroup={insertOLGroup}
           onApplyPreset={applyPreset}

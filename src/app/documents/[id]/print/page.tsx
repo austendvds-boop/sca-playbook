@@ -1,4 +1,14 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
-export default function PrintDoc({params}:{params:{id:string}}){ const [doc,setDoc]=useState<any>(null); const [plays,setPlays]=useState<any[]>([]); useEffect(()=>{fetch(`/api/documents/${params.id}`).then(r=>r.json()).then(d=>setDoc(d.data)); fetch('/api/plays').then(r=>r.json()).then(d=>setPlays(d.data||[])); setTimeout(()=>window.print(),300);},[params.id]); if(!doc) return null; return <main className='p-6 print:p-2'><div className='bg-[#CC0000] text-white p-3 font-bold'>SCA Eagles</div><h1 className='text-2xl font-bold my-3'>{doc.layoutData.playName||doc.name}</h1><div className='grid grid-cols-2 gap-3'>{(doc.layoutData.diagrams||[]).map((s:any)=>{const p=plays.find(x=>x.id===s.playId);return <div key={s.key} className='border p-2'>{p?<PlaySVGRenderer elements={p.canvasData} className='w-full h-48'/>:<div className='h-48'/>}</div>})}</div></main> }
+import { useEffect, useMemo, useState } from 'react';
+import { DocumentRec, Play, PlayCardLayout, ReferenceLayout } from '@/lib/store';
+import { PlayCardTemplate } from '@/components/templates/PlayCardTemplate';
+import { ReferenceSheetTemplate } from '@/components/templates/ReferenceSheetTemplate';
+
+export default function PrintDoc({ params }: { params: { id: string } }) {
+  const [doc, setDoc] = useState<DocumentRec | null>(null);
+  const [plays, setPlays] = useState<Play[]>([]);
+  useEffect(() => { fetch(`/api/documents/${params.id}`).then((r) => r.json()).then((d) => setDoc(d.data)); fetch('/api/plays').then((r) => r.json()).then((d) => setPlays(d.data || [])); setTimeout(() => window.print(), 400); }, [params.id]);
+  const playMap = useMemo(() => new Map(plays.map((p) => [p.id, p])), [plays]);
+  if (!doc) return null;
+  return <main className='p-2'><div className='mb-2 flex items-center justify-between bg-[#CC0000] p-2 text-white'><div className='font-bold'>SCA Eagles</div><div className='text-sm'>Playbook Print</div></div>{doc.docType==='play_card' ? <PlayCardTemplate layout={doc.layoutData as PlayCardLayout} playMap={playMap} onChange={() => {}}/> : <ReferenceSheetTemplate layout={doc.layoutData as ReferenceLayout} playMap={playMap} onChange={() => {}}/>}</main>;
+}

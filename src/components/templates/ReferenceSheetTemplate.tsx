@@ -1,0 +1,8 @@
+"use client";
+import { Play, ReferenceLayout } from '@/lib/store';
+import { EditableText } from '@/components/shared/EditableText';
+import { DiagramSlot } from './DiagramSlot';
+
+export function ReferenceSheetTemplate({ layout, playMap, onChange }: { layout: ReferenceLayout; playMap: Map<string, Play>; onChange: (next: ReferenceLayout) => void }) {
+  return <div className='bg-white p-3'><div className='mb-2 bg-[#CC0000] p-3 text-lg font-bold text-white'><EditableText value={layout.title} onSave={(title)=>onChange({...layout,title})}/></div><div className='grid grid-cols-[1fr_2fr_2fr] bg-slate-100 p-2 text-xs font-bold'><div>COMBINATION</div><div>DESCRIPTION</div><div>DIAGRAM(S)</div></div>{layout.rows.map((row,i)=><div key={row.id} className={`grid grid-cols-[1fr_2fr_2fr] gap-2 p-2 ${i%2===0?'bg-white':'bg-slate-50'}`}><EditableText value={row.combination} onSave={(v)=>{const rows=[...layout.rows]; rows[i]={...row,combination:v}; onChange({...layout,rows});}}/><EditableText value={row.description} onSave={(v)=>{const rows=[...layout.rows]; rows[i]={...row,description:v}; onChange({...layout,rows});}}/><div className='grid gap-2'>{row.diagrams.map((d,j)=><DiagramSlot key={d.key} play={d.playId?playMap.get(d.playId):undefined} labelTop={d.labelTop} labelBottom={d.labelBottom} onLabelTop={()=>{}} onLabelBottom={()=>{}} onRemove={()=>{const rows=[...layout.rows]; rows[i].diagrams[j]={...d,playId:null}; onChange({...layout,rows});}}/>)}</div></div>)}<button className='mt-2 rounded border px-2 py-1 text-xs' onClick={()=>onChange({...layout,rows:[...layout.rows,{id:crypto.randomUUID(),combination:'',description:'',diagrams:[{key:crypto.randomUUID(),playId:null,labelTop:'',labelBottom:''}]}]})}>+ Add Row</button></div>;
+}

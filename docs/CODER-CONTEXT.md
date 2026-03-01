@@ -266,3 +266,30 @@ Implemented and verified all requested fixes:
 - `src/lib/store.ts`
 - `src/app/documents/[id]/page.tsx`
 - `src/app/page.tsx`
+
+## 2026-03-01 ChalkTalk bug batch follow-up (thumbnail fallback hardening)
+
+### Build status
+- Command: `npm run build`
+- Result: ? Success (zero errors)
+
+### Fixes implemented
+1. **Play picker thumbnail fallback restored for serialized SVG records**
+   - File: `src/app/documents/[id]/page.tsx`
+   - Insert Play modal now renders in this order:
+     - `canvasData` via `PlaySVGRenderer` when available
+     - `thumbnailSvg` raw inline render when `canvasData` is empty
+     - explicit `No Thumbnail` placeholder only when neither source exists
+
+2. **Play library card thumbnail fallback aligned with same logic**
+   - File: `src/app/plays/page.tsx`
+   - Card preview now uses `canvasData` first, then serialized `thumbnailSvg`, then placeholder.
+
+### Verification notes
+- Live production check: `/plays` search works with real keyboard input:
+  - `Trips` => 1 result card
+  - `zzzz` => empty state (`No plays found`)
+- API persistence check on production:
+  - POST `/api/plays` created play id
+  - POST `/api/plays/{id}/duplicate` created duplicate id
+  - both ids returned by subsequent GET `/api/plays`

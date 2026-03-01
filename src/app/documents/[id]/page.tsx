@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { DocumentRec, Play, ReferenceLayout } from '@/lib/store';
@@ -134,7 +134,13 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
                   <button key={p.id} type='button' onClick={() => selectPlayForSlot(p.id)} className='rounded border-2 border-[#003087] p-3 text-left'>
                     <div className='mb-2 text-sm font-black text-[#003087]'>{p.name}</div>
                     <div className='h-32 w-full overflow-hidden border border-[#003087]'>
-                      <PlaySVGRenderer elements={p.canvasData} className='h-full w-full' />
+                      {Array.isArray(p.canvasData) && p.canvasData.length > 0 ? (
+                        <PlaySVGRenderer elements={p.canvasData} className='h-full w-full' />
+                      ) : p.thumbnailSvg?.trim().startsWith('<svg') ? (
+                        <div className='h-full w-full' dangerouslySetInnerHTML={{ __html: p.thumbnailSvg }} />
+                      ) : (
+                        <div className='flex h-full items-center justify-center text-xs font-bold uppercase text-[#003087]/60'>No Thumbnail</div>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -146,4 +152,5 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
     </main>
   );
 }
+
 

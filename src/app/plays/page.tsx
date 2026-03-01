@@ -126,7 +126,13 @@ export default function PlaysPage() {
           {filteredPlays.map((p) => (
             <div key={p.id} className="overflow-hidden rounded border bg-white">
               <div className="h-44 border-b">
-                <PlaySVGRenderer elements={p.canvasData} className="h-full w-full" viewBox="0 260 1000 200" />
+                {Array.isArray(p.canvasData) && p.canvasData.length > 0 ? (
+                  <PlaySVGRenderer elements={p.canvasData} className="h-full w-full" viewBox="0 260 1000 200" />
+                ) : p.thumbnailSvg?.trim().startsWith('<svg') ? (
+                  <div className="h-full w-full" dangerouslySetInnerHTML={{ __html: p.thumbnailSvg }} />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs font-semibold uppercase text-gray-400">No Thumbnail</div>
+                )}
               </div>
               <div className="space-y-2 p-3">
                 <div className="font-semibold">{p.name}</div>
@@ -166,3 +172,4 @@ export default function PlaysPage() {
     </main>
   );
 }
+

@@ -292,7 +292,12 @@ export function CanvasToolbar({
             const Icon = t.icon;
             const activeClass = active === t.key ? 'bg-[#CC0000] text-white' : 'bg-transparent text-slate-300 hover:bg-white/10';
             return (
-              <button key={t.key} onClick={() => setActive(t.key)} title={`${t.label} (${t.shortcut})`} className={`rounded-full p-2 ${activeClass}`}>
+              <button
+                key={t.key}
+                onClick={() => setActive(t.key === 'select' ? 'select' : active === t.key ? 'select' : t.key)}
+                title={`${t.label} (${t.shortcut})`}
+                className={`rounded-full p-2 ${activeClass}`}
+              >
                 <Icon className="h-4 w-4" />
               </button>
             );

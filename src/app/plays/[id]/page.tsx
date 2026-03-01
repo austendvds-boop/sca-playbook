@@ -24,9 +24,10 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
         const map = new Map<string, CanvasElement>();
         (d.data?.canvasData ?? []).forEach((e: CanvasElement) => map.set(e.id, e));
         setElements(map);
+        setSelected(new Set());
         setName(d.data?.name ?? 'Play');
       });
-  }, [params.id, setElements]);
+  }, [params.id, setElements, setSelected]);
 
   const offensePresetNames = useMemo(() => offensePresets.map((p) => p.name), []);
   const defensePresetNames = useMemo(() => defensePresets.map((p) => p.name), []);
@@ -90,10 +91,30 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
     setSelected(new Set([player.id]));
   };
 
+  const insertOLGroup = () => {
+    const group: CanvasElement[] = [
+      { id: uuid(), type: 'player', x: 380, y: 280, position: 'LT', side: 'offense' },
+      { id: uuid(), type: 'player', x: 440, y: 280, position: 'LG', side: 'offense' },
+      { id: uuid(), type: 'player', x: 500, y: 280, position: 'C', side: 'offense' },
+      { id: uuid(), type: 'player', x: 560, y: 280, position: 'RG', side: 'offense' },
+      { id: uuid(), type: 'player', x: 620, y: 280, position: 'RT', side: 'offense' }
+    ];
+    setElements((prev) => {
+      const next = new Map(prev);
+      group.forEach((el) => next.set(el.id, el));
+      return next;
+    });
+    setSelected(new Set(group.map((el) => el.id)));
+  };
+
   const applyPreset = (presetName: string, side: 'offense' | 'defense') => {
     const source = side === 'offense' ? offensePresets : defensePresets;
     const preset = source.find((p) => p.name === presetName);
     if (!preset) return;
+    if (elements.size > 0) {
+      const confirmed = window.confirm(`Replace current play with ${presetName}?`);
+      if (!confirmed) return;
+    }
     const next = new Map<string, CanvasElement>();
     preset.elements.forEach((el) => {
       const id = uuid();
@@ -114,23 +135,26 @@ export default function PlayEdit({ params }: { params: { id: string } }) {
   };
 
   return (
-    <main className="fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-[#111124] text-white">
-      <CanvasToolbar
-        name={name}
-        onNameChange={setName}
-        onBack={() => router.push('/plays')}
-        onSave={save}
-        onDelete={removePlay}
-        onExportPng={exportPng}
-        onMirror={mirror}
-        onInsertPlayer={insertPlayer}
-        onApplyPreset={applyPreset}
-        offensePresetNames={offensePresetNames}
-        defensePresetNames={defensePresetNames}
-        onDeleteSelected={deleteSelected}
-      />
-      <div className="h-full w-full pb-14 pt-11">
-        <FieldSVG />
+    <main className="h-screen w-screen overflow-hidden bg-[#111124] text-white">
+      <div className="flex h-screen w-screen flex-col overflow-hidden">
+        <CanvasToolbar
+          name={name}
+          onNameChange={setName}
+          onBack={() => router.push('/plays')}
+          onSave={save}
+          onDelete={removePlay}
+          onExportPng={exportPng}
+          onMirror={mirror}
+          onInsertPlayer={insertPlayer}
+          onInsertOLGroup={insertOLGroup}
+          onApplyPreset={applyPreset}
+          offensePresetNames={offensePresetNames}
+          defensePresetNames={defensePresetNames}
+          onDeleteSelected={deleteSelected}
+        />
+        <div className="flex-1 w-full min-h-0">
+          <FieldSVG />
+        </div>
       </div>
     </main>
   );

@@ -6,17 +6,17 @@ import {
   ArrowLeft,
   ChevronsRight,
   Hexagon,
-  MoreHorizontal,
-  MoreVertical,
   MousePointer2,
   MoveRight,
+  MoreHorizontal,
+  MoreVertical,
   Save,
   Trash2,
   Type
 } from 'lucide-react';
 import { activeToolAtom, Tool } from '@/atoms/canvas';
 
-type DrawerTab = 'offense' | 'defense' | 'presets' | null;
+type DrawerTab = 'offense' | 'defense' | 'presets';
 
 type PlayerToken = {
   label: string;
@@ -38,42 +38,48 @@ const tools: { key: Tool; label: string; shortcut: string; icon: React.Component
 ];
 
 const offenseTokens: PlayerToken[] = [
-  { label: 'T', side: 'offense' },
-  { label: 'G', side: 'offense' },
-  { label: 'C', side: 'offense' },
-  { label: 'TE', side: 'offense' },
-  { label: 'X', side: 'offense' },
-  { label: 'Z', side: 'offense' },
-  { label: 'H', side: 'offense' },
   { label: 'QB', side: 'offense' },
   { label: 'RB', side: 'offense' },
   { label: 'FB', side: 'offense' },
-  { label: 'S', side: 'offense' }
+  { label: 'X', side: 'offense' },
+  { label: 'Z', side: 'offense' },
+  { label: 'H', side: 'offense' },
+  { label: 'Y', side: 'offense' },
+  { label: 'WR', side: 'offense' }
 ];
 
 const defenseTokens: PlayerToken[] = [
   { label: 'DE', side: 'defense' },
-  { label: 'E', side: 'defense' },
   { label: 'DT', side: 'defense' },
-  { label: 'N', side: 'defense' },
-  { label: 'T', side: 'defense' },
-  { label: 'B', side: 'defense' },
+  { label: 'NT', side: 'defense' },
   { label: 'W', side: 'defense' },
   { label: 'M', side: 'defense' },
   { label: 'S', side: 'defense' },
+  { label: 'B', side: 'defense' },
+  { label: 'F', side: 'defense' },
   { label: 'CB', side: 'defense' },
-  { label: 'C', side: 'defense' },
-  { label: 'FS', side: 'defense' },
   { label: 'SS', side: 'defense' },
+  { label: 'FS', side: 'defense' },
   { label: '$', side: 'defense' }
 ];
 
-function tokenClasses(label: string, side: 'offense' | 'defense', picker = false) {
+function tokenClasses(label: string, side: 'offense' | 'defense') {
   const isCenter = side === 'offense' && label.toUpperCase() === 'C';
-  const isLinebacker = side === 'defense' && ['B', 'W', 'M', 'F'].includes(label.toUpperCase());
-  const sizeClass = picker ? 'h-9 w-9 text-[11px]' : 'h-7 w-7 text-[10px]';
+  const isLinebacker = side === 'defense' && ['W', 'M', 'S', 'B', 'F'].includes(label.toUpperCase());
   const bg = side === 'offense' ? 'bg-[#CC0000]' : isLinebacker ? 'bg-[#15803d]' : 'bg-[#003087]';
-  return `${sizeClass} ${bg} text-white font-semibold ${isCenter ? 'rounded-md' : 'rounded-full'} inline-flex items-center justify-center`;
+  return `h-9 w-9 ${bg} text-white text-[11px] font-semibold ${isCenter ? 'rounded-md' : 'rounded-full'} inline-flex items-center justify-center`;
+}
+
+function OLGroupIcon() {
+  return (
+    <svg width="44" height="16" viewBox="0 0 44 16" fill="none" aria-hidden="true">
+      <circle cx="4" cy="8" r="3" fill="#ffffff" fillOpacity="0.92" />
+      <circle cx="13" cy="8" r="3" fill="#ffffff" fillOpacity="0.92" />
+      <rect x="19" y="5" width="6" height="6" rx="1" fill="#ffffff" fillOpacity="0.92" />
+      <circle cx="31" cy="8" r="3" fill="#ffffff" fillOpacity="0.92" />
+      <circle cx="40" cy="8" r="3" fill="#ffffff" fillOpacity="0.92" />
+    </svg>
+  );
 }
 
 export function CanvasToolbar({
@@ -85,6 +91,7 @@ export function CanvasToolbar({
   onExportPng,
   onMirror,
   onInsertPlayer,
+  onInsertOLGroup,
   onApplyPreset,
   offensePresetNames,
   defensePresetNames,
@@ -98,13 +105,14 @@ export function CanvasToolbar({
   onExportPng?: () => void;
   onMirror?: () => void;
   onInsertPlayer: (token: PlayerToken) => void;
+  onInsertOLGroup: () => void;
   onApplyPreset: (presetName: string, side: 'offense' | 'defense') => void;
   offensePresetNames: string[];
   defensePresetNames: string[];
   onDeleteSelected: () => void;
 }) {
   const [active, setActive] = useAtom(activeToolAtom);
-  const [drawer, setDrawer] = useState<DrawerTab>(null);
+  const [activeTab, setActiveTab] = useState<DrawerTab>('offense');
   const [menuOpen, setMenuOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(name);
@@ -121,7 +129,7 @@ export function CanvasToolbar({
 
   return (
     <>
-      <header className="no-print relative z-30 flex h-11 items-center justify-between border-b border-white/10 bg-[#0A0A1A] px-3 text-white">
+      <header className="no-print relative z-30 flex h-11 flex-shrink-0 items-center justify-between border-b border-white/10 bg-[#0A0A1A] px-3 text-white">
         <button onClick={onBack} className="rounded-md p-2 text-slate-200 hover:bg-white/10" aria-label="Back to plays">
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -174,67 +182,60 @@ export function CanvasToolbar({
         </div>
       </header>
 
-      <div
-        onClick={() => setDrawer(null)}
-        className={`no-print fixed inset-0 z-10 bg-black/30 transition-opacity ${drawer ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
-      />
+      <section className="no-print z-30 flex h-16 flex-shrink-0 items-center border-t border-white/10 bg-[#0E1022] px-2 text-white">
+        {activeTab === 'offense' ? (
+          <div className="flex w-full items-center gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={onInsertOLGroup}
+              className="inline-flex h-11 min-w-[72px] items-center justify-center rounded-full border border-[#CC0000]/70 bg-[#CC0000] px-3 hover:brightness-110"
+              title="OL Group"
+            >
+              <OLGroupIcon />
+            </button>
+            {offenseTokens.map((token) => (
+              <button
+                key={`off-${token.label}`}
+                onClick={() => onInsertPlayer(token)}
+                className="inline-flex h-11 min-w-[44px] items-center justify-center"
+                title={`Add ${token.label}`}
+              >
+                <span className={tokenClasses(token.label, token.side)}>{token.label}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
 
-      <div className={`no-print fixed inset-x-0 bottom-14 z-20 px-3 transition-transform duration-200 ease-out ${drawer ? 'translate-y-0' : 'translate-y-full pointer-events-none'}`}>
-        <div className="max-h-[36vh] overflow-y-auto rounded-t-xl border border-white/10 bg-[rgba(10,10,26,0.95)] p-3 text-white backdrop-blur-md">
-          {drawer === 'offense' ? (
-            <div className="grid grid-cols-6 gap-2">
-              {offenseTokens.map((token) => (
-                <button
-                  key={`off-${token.label}`}
-                  onClick={() => {
-                    onInsertPlayer(token);
-                    setDrawer(null);
-                  }}
-                  className="flex flex-col items-center gap-1 rounded-lg border border-white/10 p-2 hover:bg-white/10"
-                >
-                  <span className={tokenClasses(token.label, token.side, true)}>{token.label}</span>
-                </button>
-              ))}
-            </div>
-          ) : null}
+        {activeTab === 'defense' ? (
+          <div className="flex w-full items-center gap-2 overflow-x-auto pb-1">
+            {defenseTokens.map((token) => (
+              <button
+                key={`def-${token.label}`}
+                onClick={() => onInsertPlayer(token)}
+                className="inline-flex h-11 min-w-[44px] items-center justify-center"
+                title={`Add ${token.label}`}
+              >
+                <span className={tokenClasses(token.label, token.side)}>{token.label}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
 
-          {drawer === 'defense' ? (
-            <div className="grid grid-cols-6 gap-2">
-              {defenseTokens.map((token) => (
-                <button
-                  key={`def-${token.label}`}
-                  onClick={() => {
-                    onInsertPlayer(token);
-                    setDrawer(null);
-                  }}
-                  className="flex flex-col items-center gap-1 rounded-lg border border-white/10 p-2 hover:bg-white/10"
-                >
-                  <span className={tokenClasses(token.label, token.side, true)}>{token.label}</span>
-                </button>
-              ))}
-            </div>
-          ) : null}
+        {activeTab === 'presets' ? (
+          <div className="grid max-h-[58px] w-full grid-cols-4 gap-2 overflow-y-auto pr-1 sm:grid-cols-6 md:grid-cols-9">
+            {presets.map((preset) => (
+              <button
+                key={`${preset.side}-${preset.name}`}
+                onClick={() => onApplyPreset(preset.name, preset.side)}
+                className={`rounded-md border px-2 py-1 text-xs font-medium text-white hover:brightness-110 ${preset.side === 'offense' ? 'border-[#CC0000]/30 bg-[#CC0000]/20' : 'border-[#003087]/40 bg-[#003087]/25'}`}
+              >
+                {preset.name}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </section>
 
-          {drawer === 'presets' ? (
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-              {presets.map((preset) => (
-                <button
-                  key={`${preset.side}-${preset.name}`}
-                  onClick={() => {
-                    onApplyPreset(preset.name, preset.side);
-                    setDrawer(null);
-                  }}
-                  className={`rounded-md border px-3 py-2 text-sm font-medium text-white hover:brightness-110 ${preset.side === 'offense' ? 'border-[#CC0000]/30 bg-[#CC0000]/20' : 'border-[#003087]/40 bg-[#003087]/25'}`}
-                >
-                  {preset.name}
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </div>
-
-      <footer className="no-print fixed inset-x-0 bottom-0 z-30 flex h-14 items-center justify-between border-t border-white/10 bg-[#0A0A1A] px-2 text-white">
+      <footer className="no-print z-30 flex h-[52px] flex-shrink-0 items-center justify-between border-t border-white/10 bg-[#0A0A1A] px-2 text-white">
         <div className="flex items-center gap-1 overflow-x-auto pr-2">
           {tools.map((t) => {
             const Icon = t.icon;
@@ -245,15 +246,15 @@ export function CanvasToolbar({
               </button>
             );
           })}
-          <button onClick={onDeleteSelected} title="Delete selected (Del)" className="rounded-full p-2 text-slate-300 hover:bg-white/10">
+          <button onClick={onDeleteSelected} title="Delete selected" className="rounded-full p-2 text-slate-300 hover:bg-white/10">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
 
         <div className="flex items-center gap-1 text-sm font-medium">
-          <button onClick={() => setDrawer((v) => (v === 'offense' ? null : 'offense'))} className={`rounded-md px-2 py-1 ${drawer === 'offense' ? 'bg-[#CC0000] text-white' : 'bg-white/5 text-slate-200'}`}>Offense ?</button>
-          <button onClick={() => setDrawer((v) => (v === 'defense' ? null : 'defense'))} className={`rounded-md px-2 py-1 ${drawer === 'defense' ? 'bg-[#003087] text-white' : 'bg-white/5 text-slate-200'}`}>Defense ?</button>
-          <button onClick={() => setDrawer((v) => (v === 'presets' ? null : 'presets'))} className={`rounded-md px-2 py-1 ${drawer === 'presets' ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-200'}`}>Presets ?</button>
+          <button onClick={() => setActiveTab('offense')} className={`rounded-md px-2 py-1 ${activeTab === 'offense' ? 'bg-[#CC0000] text-white' : 'bg-white/5 text-slate-200'}`}>Offense</button>
+          <button onClick={() => setActiveTab('defense')} className={`rounded-md px-2 py-1 ${activeTab === 'defense' ? 'bg-[#CC0000] text-white' : 'bg-white/5 text-slate-200'}`}>Defense</button>
+          <button onClick={() => setActiveTab('presets')} className={`rounded-md px-2 py-1 ${activeTab === 'presets' ? 'bg-[#CC0000] text-white' : 'bg-white/5 text-slate-200'}`}>Presets</button>
         </div>
       </footer>
     </>

@@ -1,37 +1,99 @@
 import { CanvasElement } from '@/lib/store';
 
 type Preset = { name: string; elements: CanvasElement[] };
-const o = (id: string, x: number, y: number, p: string): CanvasElement => ({ id, type: 'player', x, y, position: p, side: 'offense' });
-const d = (id: string, x: number, y: number, p: string): CanvasElement => ({ id, type: 'player', x, y, position: p, side: 'defense' });
+
+const o = (id: string, x: number, y: number, position: string): CanvasElement => ({
+  id,
+  type: 'player',
+  x,
+  y,
+  position,
+  side: 'offense'
+});
+
+const d = (id: string, x: number, y: number, position: string): CanvasElement => ({
+  id,
+  type: 'player',
+  x,
+  y,
+  position,
+  side: 'defense'
+});
 
 export const offensePresets: Preset[] = [
-  { name: 'Shotgun Spread', elements: [o('c', 400, 340, 'C'), o('qb', 400, 390, 'QB'), o('x', 150, 250, 'X'), o('z', 650, 250, 'Z')] },
-  { name: 'Shotgun Trips Right', elements: [o('c', 400, 340, 'C'), o('qb', 400, 390, 'QB'), o('x', 150, 260, 'X'), o('h', 550, 260, 'H'), o('y', 610, 260, 'Y'), o('z', 670, 260, 'Z')] },
-  { name: 'Shotgun Trips Left', elements: [o('c', 400, 340, 'C'), o('qb', 400, 390, 'QB'), o('x', 130, 260, 'X'), o('h', 190, 260, 'H'), o('y', 250, 260, 'Y'), o('z', 650, 260, 'Z')] },
-  { name: 'Shotgun Empty', elements: [o('c', 400, 340, 'C'), o('qb', 400, 390, 'QB'), o('x', 130, 250, 'X'), o('h', 260, 250, 'H'), o('y', 400, 250, 'Y'), o('z', 540, 250, 'Z'), o('f', 670, 250, 'F')] },
-  { name: 'Singleback', elements: [o('c', 400, 340, 'C'), o('qb', 400, 370, 'QB'), o('rb', 400, 420, 'RB')] },
-  { name: 'Singleback Twins', elements: [o('c', 400, 340, 'C'), o('qb', 400, 370, 'QB'), o('rb', 400, 420, 'RB'), o('x', 200, 260, 'X'), o('z', 260, 260, 'Z')] },
-  { name: 'I-Formation', elements: [o('c', 400, 340, 'C'), o('qb', 400, 365, 'QB'), o('fb', 400, 405, 'FB'), o('tb', 400, 445, 'TB')] },
-  { name: 'I-Form Strong', elements: [o('c', 400, 340, 'C'), o('qb', 400, 365, 'QB'), o('fb', 400, 405, 'FB'), o('tb', 400, 445, 'TB'), o('te', 470, 330, 'TE')] },
-  { name: 'Pistol', elements: [o('c', 400, 340, 'C'), o('qb', 400, 385, 'QB'), o('rb', 400, 430, 'RB')] },
-  { name: 'Pistol Trips', elements: [o('c', 400, 340, 'C'), o('qb', 400, 385, 'QB'), o('rb', 400, 430, 'RB'), o('h', 550, 260, 'H'), o('y', 610, 260, 'Y'), o('z', 670, 260, 'Z')] },
-  { name: 'Goal Line', elements: [o('c', 400, 340, 'C'), o('qb', 400, 365, 'QB'), o('fb', 400, 405, 'FB'), o('tb', 400, 445, 'TB'), o('te1', 470, 330, 'TE'), o('te2', 330, 330, 'TE')] },
-  { name: 'Wildcat', elements: [o('c', 400, 340, 'C'), o('rb', 400, 390, 'RB'), o('qb', 230, 390, 'QB')] },
-  { name: 'Pro Set', elements: [o('c', 400, 340, 'C'), o('qb', 400, 365, 'QB'), o('fb', 360, 405, 'FB'), o('tb', 440, 405, 'TB')] },
-  { name: 'Ace', elements: [o('c', 400, 340, 'C'), o('qb', 400, 365, 'QB'), o('rb', 400, 420, 'RB'), o('teL', 330, 330, 'TE'), o('teR', 470, 330, 'TE')] }
+  {
+    name: 'Shotgun',
+    elements: [o('lt', 380, 280, 'LT'), o('lg', 440, 280, 'LG'), o('c', 500, 280, 'C'), o('rg', 560, 280, 'RG'), o('rt', 620, 280, 'RT'), o('te', 680, 280, 'TE'), o('qb', 500, 350, 'QB'), o('rb', 440, 350, 'RB'), o('x', 200, 280, 'X'), o('z', 800, 280, 'Z')]
+  },
+  {
+    name: 'Shotgun Trips',
+    elements: [o('lt', 380, 280, 'LT'), o('lg', 440, 280, 'LG'), o('c', 500, 280, 'C'), o('rg', 560, 280, 'RG'), o('rt', 620, 280, 'RT'), o('qb', 500, 350, 'QB'), o('x', 150, 280, 'X'), o('z', 680, 280, 'Z'), o('slot', 740, 300, 'H'), o('y', 800, 320, 'Y')]
+  },
+  {
+    name: 'Empty',
+    elements: [o('lt', 380, 280, 'LT'), o('lg', 440, 280, 'LG'), o('c', 500, 280, 'C'), o('rg', 560, 280, 'RG'), o('rt', 620, 280, 'RT'), o('qb', 500, 350, 'QB'), o('x', 100, 300, 'X'), o('slotl', 320, 340, 'H'), o('slotr', 680, 340, 'H'), o('z', 900, 300, 'Z'), o('y', 500, 420, 'Y')]
+  },
+  {
+    name: 'I-Form',
+    elements: [o('lt', 380, 280, 'LT'), o('lg', 440, 280, 'LG'), o('c', 500, 280, 'C'), o('rg', 560, 280, 'RG'), o('rt', 620, 280, 'RT'), o('te', 680, 280, 'TE'), o('qb', 500, 310, 'QB'), o('fb', 500, 320, 'FB'), o('tb', 500, 370, 'RB'), o('x', 150, 280, 'X'), o('z', 850, 280, 'Z')]
+  },
+  {
+    name: 'Singleback',
+    elements: [o('lt', 380, 280, 'LT'), o('lg', 440, 280, 'LG'), o('c', 500, 280, 'C'), o('rg', 560, 280, 'RG'), o('rt', 620, 280, 'RT'), o('te', 680, 280, 'TE'), o('qb', 500, 310, 'QB'), o('rb', 500, 340, 'RB'), o('x', 150, 280, 'X'), o('z', 850, 280, 'Z')]
+  },
+  {
+    name: 'Pistol',
+    elements: [o('lt', 380, 280, 'LT'), o('lg', 440, 280, 'LG'), o('c', 500, 280, 'C'), o('rg', 560, 280, 'RG'), o('rt', 620, 280, 'RT'), o('te', 680, 280, 'TE'), o('qb', 500, 320, 'QB'), o('rb', 500, 340, 'RB'), o('x', 150, 280, 'X'), o('z', 850, 280, 'Z')]
+  },
+  {
+    name: 'Wildcat',
+    elements: [o('lt', 380, 280, 'LT'), o('lg', 440, 280, 'LG'), o('c', 500, 280, 'C'), o('rg', 560, 280, 'RG'), o('rt', 620, 280, 'RT'), o('rb', 500, 340, 'RB'), o('qb', 200, 280, 'QB'), o('wr', 800, 280, 'WR'), o('te', 680, 280, 'TE'), o('util', 560, 340, 'FB')]
+  },
+  {
+    name: 'Goal Line',
+    elements: [o('tel', 350, 280, 'Y'), o('lt', 400, 280, 'LT'), o('lg', 450, 280, 'LG'), o('c', 500, 280, 'C'), o('rg', 550, 280, 'RG'), o('rt', 600, 280, 'RT'), o('ter', 650, 280, 'Y'), o('qb', 500, 300, 'QB'), o('fbl', 480, 320, 'FB'), o('fbr', 520, 320, 'FB'), o('tb', 500, 350, 'RB')]
+  }
 ];
 
 export const defensePresets: Preset[] = [
-  { name: '4-3 Over', elements: [d('de1', 300, 300, 'DE'), d('dt1', 360, 300, 'DT'), d('dt2', 440, 300, 'DT'), d('de2', 500, 300, 'DE'), d('sam', 300, 250, 'SAM'), d('mike', 400, 240, 'MIKE'), d('will', 500, 250, 'WILL')] },
-  { name: '4-3 Under', elements: [d('de1', 290, 300, 'DE'), d('nt', 380, 300, 'NT'), d('dt', 450, 300, 'DT'), d('de2', 520, 300, 'DE'), d('sam', 300, 245, 'SAM'), d('mike', 400, 240, 'MIKE'), d('will', 500, 245, 'WILL')] },
-  { name: '3-4 Base', elements: [d('de1', 320, 300, 'DE'), d('nt', 400, 300, 'NT'), d('de2', 480, 300, 'DE'), d('sam', 260, 250, 'SAM'), d('mike', 370, 240, 'MIKE'), d('will', 430, 240, 'WILL'), d('jack', 540, 250, 'JACK')] },
-  { name: 'Nickel 4-2-5', elements: [d('de1', 300, 300, 'DE'), d('dt1', 360, 300, 'DT'), d('dt2', 440, 300, 'DT'), d('de2', 500, 300, 'DE'), d('mike', 380, 245, 'MIKE'), d('will', 420, 245, 'WILL')] },
-  { name: 'Dime 4-1-6', elements: [d('de1', 300, 300, 'DE'), d('dt1', 360, 300, 'DT'), d('dt2', 440, 300, 'DT'), d('de2', 500, 300, 'DE'), d('mike', 400, 240, 'MIKE')] },
-  { name: '3-3-5 Stack', elements: [d('de1', 320, 300, 'DE'), d('nt', 400, 300, 'NT'), d('de2', 480, 300, 'DE'), d('sam', 340, 250, 'SAM'), d('mike', 400, 250, 'MIKE'), d('will', 460, 250, 'WILL')] },
-  { name: '46 Defense', elements: [d('de1', 300, 300, 'DE'), d('dt1', 360, 300, 'DT'), d('dt2', 440, 300, 'DT'), d('de2', 500, 300, 'DE'), d('lb1', 340, 250, 'LB'), d('lb2', 400, 250, 'LB'), d('lb3', 460, 250, 'LB')] },
-  { name: 'Cover 2 Shell', elements: [d('fs', 320, 180, 'FS'), d('ss', 480, 180, 'SS')] },
-  { name: 'Cover 3 Shell', elements: [d('cb1', 230, 200, 'CB'), d('fs', 400, 170, 'FS'), d('cb2', 570, 200, 'CB')] },
-  { name: 'Cover 4 Shell', elements: [d('s1', 260, 180, 'S'), d('s2', 360, 180, 'S'), d('s3', 440, 180, 'S'), d('s4', 540, 180, 'S')] },
-  { name: 'Cover 1 / Man Free', elements: [d('fs', 400, 180, 'FS')] },
-  { name: 'Cover 0 / Man', elements: [] }
+  {
+    name: '4-3 Over',
+    elements: [d('de1', 320, 260, 'DE'), d('dt', 420, 265, 'DT'), d('nt', 520, 265, 'NT'), d('de2', 680, 260, 'DE'), d('w', 380, 220, 'W'), d('m', 500, 225, 'M'), d('s', 620, 220, 'S'), d('cb1', 200, 170, 'CB'), d('cb2', 800, 170, 'CB'), d('ss', 420, 120, 'SS'), d('fs', 580, 120, 'FS')]
+  },
+  {
+    name: '4-3 Under',
+    elements: [d('de1', 280, 260, 'DE'), d('dt', 380, 265, 'DT'), d('nt', 480, 265, 'NT'), d('de2', 640, 260, 'DE'), d('w', 580, 220, 'W'), d('m', 440, 225, 'M'), d('s', 700, 220, 'S'), d('cb1', 150, 170, 'CB'), d('cb2', 850, 170, 'CB'), d('ss', 400, 120, 'SS'), d('fs', 600, 120, 'FS')]
+  },
+  {
+    name: '3-4 Base',
+    elements: [d('de1', 380, 260, 'DE'), d('nt', 500, 265, 'NT'), d('de2', 620, 260, 'DE'), d('w', 320, 215, 'W'), d('m', 440, 220, 'M'), d('s', 560, 220, 'S'), d('b', 680, 215, 'B'), d('cb1', 150, 170, 'CB'), d('cb2', 850, 170, 'CB'), d('ss', 420, 120, 'SS'), d('fs', 580, 120, 'FS')]
+  },
+  {
+    name: 'Nickel',
+    elements: [d('de1', 320, 260, 'DE'), d('dt1', 440, 265, 'DT'), d('dt2', 560, 265, 'DT'), d('de2', 680, 260, 'DE'), d('m', 460, 220, 'M'), d('w', 540, 220, 'W'), d('cb1', 150, 170, 'CB'), d('cb2', 850, 170, 'CB'), d('money', 650, 180, '$'), d('ss', 400, 120, 'SS'), d('fs', 600, 120, 'FS')]
+  },
+  {
+    name: 'Dime',
+    elements: [d('de1', 320, 260, 'DE'), d('dt1', 440, 265, 'DT'), d('dt2', 560, 265, 'DT'), d('de2', 680, 260, 'DE'), d('m', 500, 220, 'M'), d('cb1', 120, 170, 'CB'), d('cb2', 880, 170, 'CB'), d('d1', 350, 190, '$'), d('d2', 650, 190, '$'), d('ss', 420, 120, 'SS'), d('fs', 580, 120, 'FS')]
+  },
+  {
+    name: 'Cover 2',
+    elements: [d('de1', 340, 260, 'DE'), d('dt1', 440, 265, 'DT'), d('dt2', 560, 265, 'DT'), d('de2', 660, 260, 'DE'), d('w', 380, 220, 'W'), d('m', 500, 200, 'M'), d('s', 620, 220, 'S'), d('cb1', 200, 200, 'CB'), d('cb2', 800, 200, 'CB'), d('fs1', 380, 100, 'FS'), d('fs2', 620, 100, 'FS')]
+  },
+  {
+    name: 'Cover 3',
+    elements: [d('de1', 340, 260, 'DE'), d('dt1', 440, 265, 'DT'), d('dt2', 560, 265, 'DT'), d('de2', 660, 260, 'DE'), d('w', 350, 220, 'W'), d('m', 500, 215, 'M'), d('s', 650, 220, 'S'), d('cb1', 200, 130, 'CB'), d('cb2', 800, 130, 'CB'), d('fs', 500, 110, 'FS'), d('ss', 580, 190, 'SS')]
+  },
+  {
+    name: 'Cover 0',
+    elements: [d('de1', 340, 260, 'DE'), d('dt1', 440, 265, 'DT'), d('dt2', 560, 265, 'DT'), d('de2', 660, 260, 'DE'), d('w', 380, 240, 'W'), d('s', 620, 240, 'S'), d('m', 500, 200, 'M'), d('cb1', 200, 280, 'CB'), d('cb2', 800, 280, 'CB'), d('ss', 350, 200, 'SS'), d('fs', 650, 200, 'FS')]
+  },
+  {
+    name: '46',
+    elements: [d('de1', 300, 260, 'DE'), d('dt', 400, 265, 'DT'), d('nt', 500, 265, 'NT'), d('de2', 660, 260, 'DE'), d('w', 360, 230, 'W'), d('m', 500, 235, 'M'), d('s', 640, 230, 'S'), d('ss', 580, 250, 'SS'), d('cb1', 150, 170, 'CB'), d('cb2', 850, 170, 'CB'), d('fs', 500, 100, 'FS')]
+  },
+  {
+    name: '3-3-5',
+    elements: [d('de1', 400, 260, 'DE'), d('nt', 500, 265, 'NT'), d('de2', 600, 260, 'DE'), d('w', 400, 210, 'W'), d('m', 500, 215, 'M'), d('s', 600, 210, 'S'), d('cb1', 150, 170, 'CB'), d('cb2', 850, 170, 'CB'), d('money', 300, 180, '$'), d('ss', 420, 120, 'SS'), d('fs', 580, 120, 'FS')]
+  }
 ];

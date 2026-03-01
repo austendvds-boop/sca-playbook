@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Link from 'next/link';
 
 export const metadata: Metadata = { title: 'SCA Playbook', description: 'Football play diagram app' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, maximumScale: 1 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

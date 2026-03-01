@@ -1,14 +1,17 @@
 "use client";
 import { useAtom } from 'jotai';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { activeToolAtom, elementsAtom, selectedIdsAtom, undoStackAtom, redoStackAtom, viewportAtom } from '@/atoms/canvas';
 import { CanvasElement, Point } from '@/lib/store';
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
 
+const FIELD_WIDTH = 1000;
+const FIELD_HEIGHT = 560;
+
 function pointFromClient(clientX: number, clientY: number, svg: SVGSVGElement): Point {
   const r = svg.getBoundingClientRect();
-  return { x: ((clientX - r.left) / r.width) * 800, y: ((clientY - r.top) / r.height) * 600 };
+  return { x: ((clientX - r.left) / r.width) * FIELD_WIDTH, y: ((clientY - r.top) / r.height) * FIELD_HEIGHT };
 }
 
 function svgPoint(evt: React.PointerEvent<SVGSVGElement>): Point {
@@ -16,7 +19,7 @@ function svgPoint(evt: React.PointerEvent<SVGSVGElement>): Point {
 }
 
 export function FieldSVG() {
-  const [tool] = useAtom(activeToolAtom);
+  const [tool, setTool] = useAtom(activeToolAtom);
   const [elements, setElements] = useAtom(elementsAtom);
   const [selected, setSelected] = useAtom(selectedIdsAtom);
   const [undo, setUndo] = useAtom(undoStackAtom);
@@ -34,6 +37,26 @@ export function FieldSVG() {
     setRedo([]);
     setElements(next);
   };
+
+  useEffect(() => {
+    const onKey = (evt: KeyboardEvent) => {
+      const key = evt.key.toLowerCase();
+      if (key === 'v') setTool('select');
+      if (key === 'a') setTool('route');
+      if (key === 'b') setTool('block');
+      if (key === 'm') setTool('motion');
+      if (key === 't') setTool('text');
+      if (key === 'z') setTool('zone');
+      if (evt.key === 'Delete' && selected.size > 0) {
+        const next = new Map(elements);
+        selected.forEach((id) => next.delete(id));
+        commit(next);
+        setSelected(new Set());
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [setTool, elements, selected, setSelected]);
 
   const onCanvasClick = (evt: React.PointerEvent<SVGSVGElement>) => {
     const p = svgPoint(evt);
@@ -92,7 +115,7 @@ export function FieldSVG() {
 
   const onDoubleClick = () => {
     if ((tool === 'route' || tool === 'block' || tool === 'motion') && draftRef.current.length > 1) {
-      const el: CanvasElement = { id: uuid(), type: tool, points: [...draftRef.current], color: '#111827', lineType: tool === 'motion' ? 'dashed' : 'solid' };
+      const el: CanvasElement = { id: uuid(), type: tool, points: [...draftRef.current], color: '#e2e8f0', lineType: tool === 'motion' ? 'dashed' : 'solid' };
       commit(new Map(elements).set(el.id, el));
       draftRef.current = [];
       setPreview([]);
@@ -100,7 +123,7 @@ export function FieldSVG() {
   };
 
   return (
-    <div className="h-[74vh] rounded border bg-white">
+    <div className="relative h-full w-full overflow-hidden rounded-none bg-[#0f1022]">
       <PlaySVGRenderer
         elements={elementArr}
         className="h-full w-full"

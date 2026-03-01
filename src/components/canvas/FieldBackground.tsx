@@ -3,24 +3,26 @@ type Props = {
   height?: number;
 };
 
-export function FieldBackground({ width = 800, height = 600 }: Props) {
+export function FieldBackground({ width = 1000, height = 560 }: Props) {
   const midY = height / 2;
 
   return (
     <>
-      <rect x="0" y="0" width={width} height={height} fill="#1f7a3c" />
-      <rect x="0" y="0" width={width} height={height} fill="none" stroke="#ffffff" strokeWidth="4" />
-      {[...Array(13)].map((_, i) => (
-        <line key={`yard-${i}`} x1={i * (width / 12)} y1={0} x2={i * (width / 12)} y2={height} stroke="#ffffff" opacity={0.45} />
+      <rect x="0" y="0" width={width} height={height} fill="#1C1C2E" />
+      <rect x="0" y="0" width="90" height={height} fill="#252538" />
+      <rect x={width - 90} y="0" width="90" height={height} fill="#252538" />
+      <rect x="0" y="0" width={width} height={height} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+
+      {[...Array(11)].map((_, i) => {
+        const x = 90 + i * ((width - 180) / 10);
+        return <line key={`yard-${i}`} x1={x} y1={0} x2={x} y2={height} stroke="rgba(255,255,255,0.12)" />;
+      })}
+
+      {[120, 140, 160, 400, 420, 440].map((y) => (
+        <line key={`hash-${y}`} x1={90} y1={y} x2={width - 90} y2={y} stroke="rgba(255,255,255,0.12)" />
       ))}
-      {[120, 180, 420, 480].map((y) => (
-        <line key={`hash-${y}`} x1={0} y1={y} x2={width} y2={y} stroke="#ffffff" opacity={0.25} />
-      ))}
-      <line x1={0} y1={midY} x2={width} y2={midY} stroke="#ffffff" strokeWidth="3" opacity={0.95} />
-      <text x={12} y={midY - 8} fill="#ffffff" fontSize="13" fontWeight="700" opacity={0.95}>
-        LOS
-      </text>
-      <rect x="0" y="0" width="80" height={height} fill="#14532d" opacity={0.75} />
+
+      <line x1={0} y1={midY} x2={width} y2={midY} stroke="rgba(255,255,255,0.35)" strokeWidth="2" />
     </>
   );
 }

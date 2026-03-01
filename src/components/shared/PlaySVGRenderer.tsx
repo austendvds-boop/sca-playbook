@@ -21,10 +21,10 @@ const pathData = (points: Point[]) => points.map((p, i) => `${i === 0 ? 'M' : 'L
 
 export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onBackgroundPointerDown }: Props) {
   return (
-    <svg viewBox="0 0 800 600" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
+    <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
       <defs>
-        <marker id="arrow-open" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#111827" /></marker>
-        <marker id="arrow-filled" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#111827" /></marker>
+        <marker id="arrow-open" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#e2e8f0" /></marker>
+        <marker id="arrow-filled" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e2e8f0" /></marker>
       </defs>
       <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`}>
         <FieldBackground />
@@ -32,20 +32,22 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
         {elements.map((el) => {
           if (el.type === 'player') {
             const selected = selectedIds?.has(el.id);
-            const isCenter = el.position.toUpperCase() === 'C';
-            const lb = ['MIKE', 'WILL', 'SAM', 'LB'].some((s) => el.position.toUpperCase().includes(s));
+            const upper = el.position.toUpperCase();
+            const isCenter = upper === 'C' && el.side === 'offense';
+            const lb = ['B', 'W', 'M', 'F', 'MIKE', 'WILL', 'SAM', 'LB'].some((s) => upper === s || upper.includes(s));
+            const fill = el.side === 'offense' ? '#CC0000' : lb ? '#15803d' : '#003087';
             return (
               <g key={el.id} onPointerDown={(evt) => onPlayerPointerDown?.(el.id, evt, el.x, el.y)}>
-                {el.side === 'offense' && !isCenter ? <circle cx={el.x} cy={el.y} r={15} fill="#111827" stroke={selected ? '#f59e0b' : '#111827'} strokeWidth={selected ? 3 : 1} /> : null}
-                {isCenter ? <rect x={el.x - 10} y={el.y - 10} width={20} height={20} fill="#111827" stroke={selected ? '#f59e0b' : '#111827'} strokeWidth={selected ? 3 : 1} /> : null}
-                <text x={el.x} y={el.y + 5} textAnchor="middle" fontSize="13" fontWeight="700" fill={el.side === 'offense' ? '#fff' : lb ? '#16a34a' : '#111827'}>{el.position.toUpperCase()}</text>
+                {!isCenter ? <circle cx={el.x} cy={el.y} r={14} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 2.5 : 1} /> : null}
+                {isCenter ? <rect x={el.x - 14} y={el.y - 14} width={28} height={28} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 2.5 : 1} rx={4} /> : null}
+                <text x={el.x} y={el.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">{upper}</text>
               </g>
             );
           }
-          if (el.type === 'text') return <text key={el.id} x={el.x} y={el.y} fontSize={el.fontSize ?? 16} fill={el.color ?? '#111827'}>{el.text}</text>;
+          if (el.type === 'text') return <text key={el.id} x={el.x} y={el.y} fontSize={el.fontSize ?? 16} fill={el.color ?? '#f1f5f9'}>{el.text}</text>;
           if (el.type === 'zone') return <polygon key={el.id} points={el.points.map((p) => `${p.x},${p.y}`).join(' ')} fill={el.color} opacity={el.opacity} />;
           const marker = el.type === 'block' ? 'url(#arrow-filled)' : 'url(#arrow-open)';
-          return <path key={el.id} d={pathData(el.points)} fill="none" stroke={el.color} strokeWidth={3} strokeDasharray={el.type === 'motion' || el.lineType === 'dashed' ? '8 6' : undefined} markerEnd={marker} />;
+          return <path key={el.id} d={pathData(el.points)} fill="none" stroke={el.color ?? '#e2e8f0'} strokeWidth={3} strokeDasharray={el.type === 'motion' || el.lineType === 'dashed' ? '8 6' : undefined} markerEnd={marker} />;
         })}
 
         {previewPath && previewPath.length > 1 ? <path d={pathData(previewPath)} fill="none" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={2} /> : null}

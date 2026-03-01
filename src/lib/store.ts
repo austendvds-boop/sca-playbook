@@ -102,7 +102,19 @@ const defaultPlayCard = (): PlayCardLayout => ({
     { key: 'diagram_1', playId: null, labelTop: '', labelBottom: '' },
     { key: 'diagram_2', playId: null, labelTop: '', labelBottom: '' }
   ],
-  assignments: [{ position: 'QB', assignment: '' }],
+  assignments: [
+    { position: 'PST', assignment: '' },
+    { position: 'PSG', assignment: '' },
+    { position: 'OC', assignment: '' },
+    { position: 'BSG', assignment: '' },
+    { position: 'BST', assignment: '' },
+    { position: 'Y', assignment: '' },
+    { position: 'X', assignment: '' },
+    { position: 'Z', assignment: '' },
+    { position: 'H/S', assignment: '' },
+    { position: 'A', assignment: '' },
+    { position: 'QB', assignment: '' }
+  ],
   notes: ''
 });
 

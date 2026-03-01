@@ -9,6 +9,7 @@ type Props = {
   previewPath?: Point[];
   selectedIds?: Set<string>;
   touchActionNone?: boolean;
+  draggingPlayer?: { id: string; x: number; y: number };
   onCanvasClick?: (evt: React.PointerEvent<SVGSVGElement>) => void;
   onCanvasPointerMove?: (evt: React.PointerEvent<SVGSVGElement>) => void;
   onCanvasPointerUp?: (evt: React.PointerEvent<SVGSVGElement>) => void;
@@ -19,7 +20,7 @@ type Props = {
 
 const pathData = (points: Point[]) => points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
-export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onBackgroundPointerDown }: Props) {
+export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onBackgroundPointerDown }: Props) {
   return (
     <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
       <defs>
@@ -36,11 +37,13 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
             const isCenter = upper === 'C' && el.side === 'offense';
             const lb = ['B', 'W', 'M', 'F', 'MIKE', 'WILL', 'SAM', 'LB'].some((s) => upper === s || upper.includes(s));
             const fill = el.side === 'offense' ? '#CC0000' : lb ? '#15803d' : '#003087';
+            const renderX = draggingPlayer?.id === el.id ? draggingPlayer.x : el.x;
+            const renderY = draggingPlayer?.id === el.id ? draggingPlayer.y : el.y;
             return (
-              <g key={el.id} onPointerDown={(evt) => onPlayerPointerDown?.(el.id, evt, el.x, el.y)}>
-                {!isCenter ? <circle cx={el.x} cy={el.y} r={14} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 2.5 : 1} /> : null}
-                {isCenter ? <rect x={el.x - 14} y={el.y - 14} width={28} height={28} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 2.5 : 1} rx={4} /> : null}
-                <text x={el.x} y={el.y + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">{upper}</text>
+              <g key={el.id} onPointerDown={(evt) => onPlayerPointerDown?.(el.id, evt, renderX, renderY)}>
+                {!isCenter ? <circle cx={renderX} cy={renderY} r={14} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 2.5 : 1} /> : null}
+                {isCenter ? <rect x={renderX - 14} y={renderY - 14} width={28} height={28} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 2.5 : 1} rx={4} /> : null}
+                <text x={renderX} y={renderY + 4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#ffffff">{upper}</text>
               </g>
             );
           }

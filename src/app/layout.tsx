@@ -2,7 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ConditionalNav } from '@/components/ConditionalNav';
 
-export const metadata: Metadata = { title: 'SCA Playbook', description: 'Football play diagram app' };
+export const metadata: Metadata = {
+  title: 'SCA Playbook',
+  description: 'Football play diagram app',
+  icons: {
+    icon: '/sca-logo.png'
+  }
+};
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, maximumScale: 1 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -129,12 +129,13 @@ export function CanvasToolbar({
 
   return (
     <>
-      <header className="no-print relative z-30 flex h-11 flex-shrink-0 items-center justify-between border-b border-white/10 bg-[#0A0A1A] px-3 text-white">
-        <button onClick={onBack} className="rounded-md p-2 text-slate-200 hover:bg-white/10" aria-label="Back to plays">
+      <header className="no-print relative z-30 flex h-12 flex-shrink-0 items-center justify-between border-b border-white/10 bg-[#003087] px-3 text-white">
+        <button onClick={onBack} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="Back to plays">
           <ArrowLeft className="h-4 w-4" />
         </button>
 
-        <div className="mx-2 min-w-0 flex-1 text-center">
+        <div className="mx-2 flex min-w-0 flex-1 items-center gap-2">
+          <img src="/sca-logo.png" alt="SCA Eagles" className="h-7 w-7 object-contain" />
           {editingName ? (
             <input
               autoFocus
@@ -156,10 +157,10 @@ export function CanvasToolbar({
                   setEditingName(false);
                 }
               }}
-              className="w-full rounded-md border border-white/20 bg-white/10 px-2 py-1 text-center text-sm text-white outline-none"
+              className="w-full rounded-md border border-white/20 bg-white/10 px-2 py-1 text-sm text-white outline-none"
             />
           ) : (
-            <button onClick={() => setEditingName(true)} className="max-w-full truncate text-sm font-semibold text-white/95">
+            <button onClick={() => setEditingName(true)} className="max-w-full truncate text-left text-sm font-semibold text-white">
               {name}
             </button>
           )}
@@ -169,7 +170,7 @@ export function CanvasToolbar({
           <button onClick={onSave} className="rounded-md p-2 text-[#CC0000] hover:bg-white/10" aria-label="Save play">
             <Save className="h-4 w-4" />
           </button>
-          <button onClick={() => setMenuOpen((v) => !v)} className="rounded-md p-2 text-slate-200 hover:bg-white/10" aria-label="More options">
+          <button onClick={() => setMenuOpen((v) => !v)} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="More options">
             <MoreVertical className="h-4 w-4" />
           </button>
           {menuOpen ? (
@@ -260,4 +261,3 @@ export function CanvasToolbar({
     </>
   );
 }
-

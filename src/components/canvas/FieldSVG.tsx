@@ -28,6 +28,7 @@ export function FieldSVG() {
   const draftRef = useRef<Point[]>([]);
   const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
   const [preview, setPreview] = useState<Point[]>([]);
+  const [draggingPlayer, setDraggingPlayer] = useState<{ id: string; x: number; y: number } | null>(null);
 
   const elementArr = useMemo(() => [...elements.values()], [elements]);
   const pushUndo = () => setUndo([...undo, elementArr]);
@@ -83,10 +84,7 @@ export function FieldSVG() {
   const onPointerMove = (evt: React.PointerEvent<SVGSVGElement>) => {
     const p = svgPoint(evt);
     if (dragRef.current) {
-      const hit = elements.get(dragRef.current.id);
-      if (hit?.type === 'player') {
-        setPreview([{ x: p.x - dragRef.current.dx, y: p.y - dragRef.current.dy }]);
-      }
+      setDraggingPlayer({ id: dragRef.current.id, x: p.x - dragRef.current.dx, y: p.y - dragRef.current.dy });
       return;
     }
     if (tool === 'route' || tool === 'block' || tool === 'motion' || tool === 'zone') {
@@ -96,16 +94,15 @@ export function FieldSVG() {
 
   const onPointerUp = (evt: React.PointerEvent<SVGSVGElement>) => {
     const p = svgPoint(evt);
-    if (dragRef.current) {
-      const id = dragRef.current.id;
-      const hit = elements.get(id);
-      if (hit?.type === 'player' && preview[0]) {
+    if (dragRef.current && draggingPlayer) {
+      const hit = elements.get(dragRef.current.id);
+      if (hit?.type === 'player') {
         const next = new Map(elements);
-        next.set(id, { ...hit, x: preview[0].x, y: preview[0].y });
+        next.set(hit.id, { ...hit, x: draggingPlayer.x, y: draggingPlayer.y });
         commit(next);
       }
       dragRef.current = null;
-      setPreview([]);
+      setDraggingPlayer(null);
       return;
     }
     if (tool === 'route' || tool === 'block' || tool === 'motion') {
@@ -129,6 +126,7 @@ export function FieldSVG() {
         className="h-full w-full"
         viewport={viewport}
         previewPath={preview}
+        draggingPlayer={draggingPlayer ?? undefined}
         touchActionNone
         onCanvasClick={onCanvasClick}
         onCanvasPointerMove={onPointerMove}
@@ -139,6 +137,7 @@ export function FieldSVG() {
           if (tool === 'select') {
             const svg = evt.currentTarget.ownerSVGElement;
             if (!svg) return;
+            svg.setPointerCapture(evt.pointerId);
             const pt = pointFromClient(evt.clientX, evt.clientY, svg);
             dragRef.current = { id, dx: pt.x - x, dy: pt.y - y };
             setSelected(new Set([id]));
@@ -155,4 +154,3 @@ export function FieldSVG() {
     </div>
   );
 }
-

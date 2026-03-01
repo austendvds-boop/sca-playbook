@@ -1,10 +1,38 @@
-@import "tailwindcss";
-body { font-family: Arial, Helvetica, sans-serif; }
-* { box-sizing: border-box; }
+﻿@import "tailwindcss";
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.app-screen {
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 @media print {
-  .no-print { display:none !important; }
-  @page { size: letter; margin: 0.5in; }
-  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .no-print {
+    display: none !important;
+  }
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 
 .h-dvh {

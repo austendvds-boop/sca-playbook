@@ -50,11 +50,12 @@ export function FieldSVG() {
   const [undo, setUndo] = useAtom(undoStackAtom);
   const [, setRedo] = useAtom(redoStackAtom);
   const [viewport, setViewport] = useAtom(viewportAtom);
-  const draftRef = useRef<Point[]>([]);
+  const zoneStartRef = useRef<Point | null>(null);
   const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
   const freehandRef = useRef<Point[]>([]);
   const isDrawingRef = useRef(false);
   const [preview, setPreview] = useState<Point[]>([]);
+  const [zonePreview, setZonePreview] = useState<{ cx: number; cy: number; rx: number; ry: number } | null>(null);
   const [draggingPlayer, setDraggingPlayer] = useState<{ id: string; x: number; y: number } | null>(null);
 
   const elementArr = useMemo(() => [...elements.values()], [elements]);
@@ -117,14 +118,6 @@ export function FieldSVG() {
       const el: CanvasElement = { id: uuid(), type: 'text', x: p.x, y: p.y, text };
       commit(new Map(elements).set(el.id, el));
       setSelected(new Set([el.id]));
-    } else if (tool === 'zone') {
-      draftRef.current = [...draftRef.current, p];
-      if (draftRef.current.length >= 3 && evt.detail >= 2) {
-        const el: CanvasElement = { id: uuid(), type: 'zone', points: [...draftRef.current], color: '#60a5fa', opacity: 0.22 };
-        commit(new Map(elements).set(el.id, el));
-        draftRef.current = [];
-        setPreview([]);
-      }
     }
   };
 
@@ -144,8 +137,15 @@ export function FieldSVG() {
       }
       return;
     }
-    if (tool === 'zone' && draftRef.current.length > 0) {
-      setPreview([...draftRef.current, p]);
+    if (tool === 'zone' && zoneStartRef.current) {
+      const rx = Math.abs(p.x - zoneStartRef.current.x);
+      const ry = Math.abs(p.y - zoneStartRef.current.y);
+      setZonePreview({
+        cx: zoneStartRef.current.x,
+        cy: zoneStartRef.current.y,
+        rx: Math.max(rx, 10),
+        ry: Math.max(ry, 10)
+      });
     }
   };
 
@@ -162,6 +162,26 @@ export function FieldSVG() {
       setDraggingPlayer(null);
       return;
     }
+    if (tool === 'zone') {
+      if (zoneStartRef.current && zonePreview) {
+        const el: CanvasElement = {
+          id: uuid(),
+          type: 'zone',
+          cx: zonePreview.cx,
+          cy: zonePreview.cy,
+          rx: zonePreview.rx,
+          ry: zonePreview.ry,
+          color: '#3b82f6',
+          opacity: 0.3
+        };
+        commit(new Map(elements).set(el.id, el));
+        setSelected(new Set([el.id]));
+      }
+      zoneStartRef.current = null;
+      setZonePreview(null);
+      return;
+    }
+
     if (isDrawingRef.current) {
       const last = freehandRef.current[freehandRef.current.length - 1];
       const dx = p.x - last.x;
@@ -176,14 +196,7 @@ export function FieldSVG() {
     }
   };
 
-  const onDoubleClick = () => {
-    if (tool === 'zone' && draftRef.current.length > 2) {
-      const el: CanvasElement = { id: uuid(), type: 'zone', points: [...draftRef.current], color: '#60a5fa', opacity: 0.22 };
-      commit(new Map(elements).set(el.id, el));
-      draftRef.current = [];
-      setPreview([]);
-    }
-  };
+  const onDoubleClick = () => {};
 
   return (
     <div className="relative h-full w-full overflow-hidden rounded-none bg-gray-100">
@@ -192,6 +205,7 @@ export function FieldSVG() {
         className="h-full w-full"
         viewport={viewport}
         previewPath={preview}
+        zonePreview={zonePreview}
         draggingPlayer={draggingPlayer ?? undefined}
         touchActionNone
         onCanvasClick={onCanvasClick}
@@ -226,6 +240,11 @@ export function FieldSVG() {
           }
           if (isLineTool(tool)) {
             startFreehand(evt, svgPoint(evt));
+            return;
+          }
+          if (tool === 'zone') {
+            zoneStartRef.current = svgPoint(evt);
+            setZonePreview({ cx: zoneStartRef.current.x, cy: zoneStartRef.current.y, rx: 10, ry: 10 });
             return;
           }
           if (tool === 'select') setSelected(new Set());

@@ -34,7 +34,10 @@ export type TextElement = {
 export type ZoneElement = {
   id: string;
   type: 'zone';
-  points: Point[];
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
   color: string;
   opacity: number;
 };

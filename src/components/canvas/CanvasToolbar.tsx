@@ -296,14 +296,16 @@ export function CanvasToolbar({
                 key={t.key}
                 onClick={() => setActive(t.key === 'select' ? 'select' : active === t.key ? 'select' : t.key)}
                 title={`${t.label} (${t.shortcut})`}
-                className={`rounded-full p-2 ${activeClass}`}
+                className={`flex flex-col items-center gap-0.5 rounded-md px-1.5 py-1 ${activeClass}`}
               >
                 <Icon className="h-4 w-4" />
+                <span className="text-[8px] uppercase tracking-wide opacity-60 leading-none">{t.label}</span>
               </button>
             );
           })}
-          <button onClick={onDeleteSelected} title="Delete selected" className="rounded-full p-2 text-slate-300 hover:bg-white/10">
+          <button onClick={onDeleteSelected} title="Delete selected" className="flex flex-col items-center gap-0.5 rounded-md px-1.5 py-1 text-slate-300 hover:bg-white/10">
             <Trash2 className="h-4 w-4" />
+            <span className="text-[8px] uppercase tracking-wide opacity-60 leading-none">DELETE</span>
           </button>
         </div>
 

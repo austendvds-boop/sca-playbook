@@ -7,6 +7,7 @@ type Props = {
   className?: string;
   viewport?: { x: number; y: number; zoom: number };
   previewPath?: Point[];
+  zonePreview?: { cx: number; cy: number; rx: number; ry: number } | null;
   selectedIds?: Set<string>;
   touchActionNone?: boolean;
   draggingPlayer?: { id: string; x: number; y: number };
@@ -91,7 +92,7 @@ function tBarData(points: Point[]): { x1: number; y1: number; x2: number; y2: nu
   };
 }
 
-export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onLinePointerDown, onBackgroundPointerDown }: Props) {
+export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, zonePreview, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onLinePointerDown, onBackgroundPointerDown }: Props) {
   return (
     <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
       <defs>
@@ -101,11 +102,11 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
-          markerWidth="3"
-          markerHeight="3"
+          markerWidth="2"
+          markerHeight="2"
           orient="auto-start-reverse"
         >
-          <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M 2 2 L 8 5 L 2 8" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </marker>
 
         {/* Small filled arrowhead - for block lines */}
@@ -114,11 +115,11 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
-          markerWidth="3"
-          markerHeight="3"
+          markerWidth="2"
+          markerHeight="2"
           orient="auto-start-reverse"
         >
-          <path d="M 1 1 L 9 5 L 1 9 Z" fill="#111111" stroke="none" />
+          <path d="M 2 2 L 8 5 L 2 8 Z" fill="#111111" />
         </marker>
       </defs>
       <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`}>
@@ -142,7 +143,22 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
             );
           }
           if (el.type === 'text') return <text key={el.id} x={el.x} y={el.y} fontSize={el.fontSize ?? 16} fill={el.color ?? '#f1f5f9'}>{el.text}</text>;
-          if (el.type === 'zone') return <polygon key={el.id} points={el.points.map((p) => `${p.x},${p.y}`).join(' ')} fill={el.color} opacity={el.opacity} />;
+          if (el.type === 'zone') {
+            return (
+              <ellipse
+                key={el.id}
+                cx={el.cx}
+                cy={el.cy}
+                rx={el.rx}
+                ry={el.ry}
+                fill={el.color}
+                opacity={el.opacity}
+                stroke={selectedIds?.has(el.id) ? '#f59e0b' : 'none'}
+                strokeWidth={2}
+                onPointerDown={(evt) => onLinePointerDown?.(el.id, evt)}
+              />
+            );
+          }
 
           const lineStyle = resolveLineStyle(el);
           const d = lineStyle === 'zigzag' ? zigzagPath(el.points) : smoothPath(el.points);
@@ -159,6 +175,18 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
         })}
 
         {previewPath && previewPath.length > 1 ? <path d={smoothPath(previewPath)} fill="none" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={2} /> : null}
+        {zonePreview ? (
+          <ellipse
+            cx={zonePreview.cx}
+            cy={zonePreview.cy}
+            rx={zonePreview.rx}
+            ry={zonePreview.ry}
+            fill="rgba(59,130,246,0.15)"
+            stroke="#3b82f6"
+            strokeDasharray="4 3"
+            strokeWidth={1.5}
+          />
+        ) : null}
       </g>
     </svg>
   );

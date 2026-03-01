@@ -6,3 +6,12 @@ body { font-family: Arial, Helvetica, sans-serif; }
   @page { size: letter; margin: 0.5in; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+.h-dvh {
+  height: 100dvh;
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+

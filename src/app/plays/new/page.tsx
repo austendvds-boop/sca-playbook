@@ -85,8 +85,8 @@ export default function NewPlay() {
   };
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-[#111124] text-white">
-      <div className="flex h-screen w-screen flex-col overflow-hidden">
+    <main className="w-screen overflow-hidden bg-[#111124] text-white" style={{ height: '100dvh' }}>
+      <div className="flex w-screen flex-col overflow-hidden h-dvh">
         <CanvasToolbar
           name={name}
           onNameChange={setName}

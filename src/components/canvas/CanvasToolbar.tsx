@@ -72,12 +72,12 @@ function tokenClasses(label: string, side: 'offense' | 'defense') {
 
 function OLGroupIcon() {
   return (
-    <svg width="44" height="16" viewBox="0 0 44 16" fill="none" aria-hidden="true">
-      <circle cx="4" cy="8" r="3" fill="#ffffff" fillOpacity="0.92" />
-      <circle cx="13" cy="8" r="3" fill="#ffffff" fillOpacity="0.92" />
-      <rect x="19" y="5" width="6" height="6" rx="1" fill="#ffffff" fillOpacity="0.92" />
-      <circle cx="31" cy="8" r="3" fill="#ffffff" fillOpacity="0.92" />
-      <circle cx="40" cy="8" r="3" fill="#ffffff" fillOpacity="0.92" />
+    <svg width="48" height="16" viewBox="0 0 48 16" fill="none" aria-hidden="true">
+      <circle cx="4" cy="8" r="3.5" fill="white" stroke="white" strokeWidth="0.5" />
+      <circle cx="14" cy="8" r="3.5" fill="white" stroke="white" strokeWidth="0.5" />
+      <rect x="20.5" y="4.5" width="7" height="7" fill="white" />
+      <circle cx="34" cy="8" r="3.5" fill="white" stroke="white" strokeWidth="0.5" />
+      <circle cx="44" cy="8" r="3.5" fill="white" stroke="white" strokeWidth="0.5" />
     </svg>
   );
 }
@@ -235,7 +235,7 @@ export function CanvasToolbar({
         ) : null}
       </section>
 
-      <footer className="no-print z-30 flex h-[52px] flex-shrink-0 items-center justify-between border-t border-white/10 bg-[#0A0A1A] px-2 text-white">
+      <footer className="no-print z-30 flex h-[52px] flex-shrink-0 items-center justify-between border-t border-white/10 bg-[#0A0A1A] px-2 pb-safe text-white">
         <div className="flex items-center gap-1 overflow-x-auto pr-2">
           {tools.map((t) => {
             const Icon = t.icon;
@@ -260,3 +260,4 @@ export function CanvasToolbar({
     </>
   );
 }
+

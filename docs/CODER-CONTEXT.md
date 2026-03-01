@@ -166,3 +166,31 @@ Implemented and verified all requested fixes:
 ### Notes
 - `src/app/plays/new/page.tsx` updated to satisfy `CanvasToolbar` prop signature after menu ownership change.
 - Non-blocking Next.js lockfile warning remains unchanged.
+
+## 2026-03-01 ChalkTalk portal + folder dropdown precision pass
+
+### Build status
+- Command: `npm run build`
+- Result: ✅ Success (zero errors)
+
+### Fixes implemented
+1. **More Options dropdown moved to portal with viewport-fixed positioning**
+   - Files:
+     - `src/components/canvas/CanvasToolbar.tsx`
+     - `src/app/plays/[id]/page.tsx`
+   - `CanvasToolbar` now portals the dropdown to `document.body` using `createPortal`.
+   - Position is computed from the `⋮` button `getBoundingClientRect()` and applied as fixed `top/right`.
+   - Portal wrapper uses `z-[9999]` to ensure menu stays above toolbar/tag rows.
+   - Removed in-menu absolute positioning so portal owns placement.
+
+2. **New Folder state append logic aligned to requested behavior**
+   - File: `src/app/plays/page.tsx`
+   - On successful folder creation, dropdown state now appends with `setFolders(prev => [...prev, folder])` (while still deduping by id).
+   - Folder `<select>` remains fully state-driven via `folders.map(...)`; no hardcoded folder options.
+   - Mount load still fetches `GET /api/folders`; API already merges seed folders + DB folders.
+
+### Files touched
+- `src/components/canvas/CanvasToolbar.tsx`
+- `src/app/plays/[id]/page.tsx`
+- `src/app/plays/page.tsx`
+- `docs/CODER-CONTEXT.md`

@@ -235,7 +235,7 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
           moreMenuOpen={moreMenuOpen}
           onToggleMoreMenu={() => setMoreMenuOpen((v) => !v)}
           moreMenu={(
-            <div className="absolute right-0 top-10 z-50 w-44 overflow-visible rounded-md border border-white/10 bg-[#111125] shadow-xl">
+            <div className="w-44 overflow-visible rounded-md border border-white/10 bg-[#111125] shadow-xl">
               <button onClick={() => { void mirror(); setMoreMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Mirror Play</button>
               <button onClick={() => { void exportPng(); setMoreMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Export PNG</button>
               <button onClick={() => { clearCanvas(); setMoreMenuOpen(false); }} className="block w-full px-3 py-2 text-left text-sm text-white hover:bg-white/10">Clear Canvas</button>

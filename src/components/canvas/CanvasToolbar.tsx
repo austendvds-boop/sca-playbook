@@ -1,7 +1,8 @@
 "use client";
 
 import { useAtom } from 'jotai';
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ArrowLeft,
   Hexagon,
@@ -147,8 +148,28 @@ export function CanvasToolbar({
   const [activeTab, setActiveTab] = useState<DrawerTab>('offense');
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(name);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+  const moreButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => setDraftName(name), [name]);
+
+  useEffect(() => {
+    if (!moreMenuOpen) return;
+
+    const updatePosition = () => {
+      const rect = moreButtonRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setMenuPos({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [moreMenuOpen]);
 
   const presets = useMemo<PresetButton[]>(
     () => [
@@ -201,10 +222,17 @@ export function CanvasToolbar({
 <button onClick={onSave} className="rounded-md p-2 text-[#CC0000] hover:bg-white/10" aria-label="Save play">
             <Save className="h-4 w-4" />
           </button>
-          <button onClick={onToggleMoreMenu} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="More options">
+          <button ref={moreButtonRef} onClick={onToggleMoreMenu} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="More options">
             <MoreVertical className="h-4 w-4" />
           </button>
-          {moreMenuOpen ? moreMenu : null}
+          {moreMenuOpen && moreMenu && menuPos && typeof document !== 'undefined'
+            ? createPortal(
+                <div className="fixed z-[9999]" style={{ top: `${menuPos.top}px`, right: `${menuPos.right}px` }}>
+                  {moreMenu}
+                </div>,
+                document.body
+              )
+            : null}
         </div>
       </header>
 

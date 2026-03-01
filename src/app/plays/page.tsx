@@ -50,7 +50,7 @@ export default function PlaysPage() {
 
     setFolders((prev) => {
       if (prev.some((f) => f.id === folder.id)) return prev;
-      return [...prev, folder].sort((a, b) => a.name.localeCompare(b.name));
+      return [...prev, folder];
     });
   };
 

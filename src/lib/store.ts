@@ -1,4 +1,4 @@
-export type Point = { x: number; y: number };
+﻿export type Point = { x: number; y: number };
 
 export type ElementType = 'player' | 'route' | 'block' | 'motion' | 'text' | 'zone';
 
@@ -100,24 +100,22 @@ export type DocumentRec = {
 const defaultPlayCard = (): PlayCardLayout => ({
   family: 'SCA',
   concept: 'Base',
-  playName: 'New Play Card',
+  playName: 'New Install Sheet',
   description: '',
-  diagrams: [
-    { key: 'diagram_1', playId: null, labelTop: '', labelBottom: '' },
-    { key: 'diagram_2', playId: null, labelTop: '', labelBottom: '' }
-  ],
+  diagrams: [{ key: 'diagram_1', playId: null, labelTop: '', labelBottom: '' }],
   assignments: [
-    { position: 'PST', assignment: '' },
-    { position: 'PSG', assignment: '' },
-    { position: 'OC', assignment: '' },
-    { position: 'BSG', assignment: '' },
-    { position: 'BST', assignment: '' },
-    { position: 'Y', assignment: '' },
-    { position: 'X', assignment: '' },
-    { position: 'Z', assignment: '' },
-    { position: 'H/S', assignment: '' },
-    { position: 'A', assignment: '' },
-    { position: 'QB', assignment: '' }
+    { position: 'QB', assignment: '' },
+    { position: 'RB', assignment: '' },
+    { position: 'FB', assignment: '' },
+    { position: 'WR (X)', assignment: '' },
+    { position: 'WR (Z)', assignment: '' },
+    { position: 'WR (H)', assignment: '' },
+    { position: 'TE (Y)', assignment: '' },
+    { position: 'LT', assignment: '' },
+    { position: 'LG', assignment: '' },
+    { position: 'C', assignment: '' },
+    { position: 'RG', assignment: '' },
+    { position: 'RT', assignment: '' }
   ],
   notes: ''
 });
@@ -163,9 +161,9 @@ if (!g.__scaStore) {
     docs: [
       {
         id: 'd1',
-        name: 'Sample Play Card',
+        name: 'Sample Install Sheet',
         docType: 'play_card',
-        layoutData: { ...defaultPlayCard(), diagrams: [{ key: 'diagram_1', playId: p1.id, labelTop: '', labelBottom: '' }, { key: 'diagram_2', playId: p2.id, labelTop: '', labelBottom: '' }] },
+        layoutData: { ...defaultPlayCard(), diagrams: [{ key: 'diagram_1', playId: p1.id, labelTop: '', labelBottom: '' }] },
         updatedAt: new Date().toISOString()
       }
     ]
@@ -174,6 +172,9 @@ if (!g.__scaStore) {
 
 export const store = g.__scaStore;
 export const makeDefaultDocLayout = (docType: 'play_card' | 'reference_sheet') => (docType === 'reference_sheet' ? defaultRefSheet() : defaultPlayCard());
+
+
+
 
 
 

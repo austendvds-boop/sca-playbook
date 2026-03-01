@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { CanvasElement, LineElement, Point } from '@/lib/store';
 import { FieldBackground } from '@/components/canvas/FieldBackground';
 
@@ -95,7 +95,31 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
   return (
     <svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
       <defs>
-        <marker id="arrow-open" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="#111111" /></marker>
+        {/* Small open arrowhead - thin V tip */}
+        <marker
+          id="arrow-open"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="3"
+          markerHeight="3"
+          orient="auto-start-reverse"
+        >
+          <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="#111111" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </marker>
+
+        {/* Small filled arrowhead - for block lines */}
+        <marker
+          id="arrow-filled"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="3"
+          markerHeight="3"
+          orient="auto-start-reverse"
+        >
+          <path d="M 1 1 L 9 5 L 1 9 Z" fill="#111111" stroke="none" />
+        </marker>
       </defs>
       <g transform={`translate(${viewport.x} ${viewport.y}) scale(${viewport.zoom})`}>
         <FieldBackground />
@@ -139,3 +163,5 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
     </svg>
   );
 }
+
+

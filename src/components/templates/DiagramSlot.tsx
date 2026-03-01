@@ -10,7 +10,8 @@ export function DiagramSlot({
   onLabelTop,
   onLabelBottom,
   onRemove,
-  onAddPlay
+  onAddPlay,
+  showBottomLabel = true
 }: {
   play?: Play;
   labelTop: string;
@@ -19,27 +20,28 @@ export function DiagramSlot({
   onLabelBottom: (v: string) => void;
   onRemove: () => void;
   onAddPlay?: () => void;
+  showBottomLabel?: boolean;
 }) {
   return (
-    <div className="relative rounded border-2 border-[#003087] p-3">
-      <EditableText value={labelTop} onSave={onLabelTop} className="mb-2 text-xs font-extrabold uppercase text-[#003087]" />
+    <div className='relative rounded border-2 border-[#003087] p-3'>
+      <EditableText value={labelTop} onSave={onLabelTop} placeholder='label' className='mb-2 text-sm font-extrabold uppercase text-[#003087]' />
 
       {play ? (
-        <PlaySVGRenderer elements={play.canvasData} className="h-64 w-full" />
+        <PlaySVGRenderer elements={play.canvasData} className='h-64 w-full' />
       ) : (
         <button
-          type="button"
+          type='button'
           onClick={onAddPlay}
-          className="flex h-64 w-full items-center justify-center rounded border-2 border-dashed border-[#CC0000] bg-white px-4 text-lg font-black uppercase text-[#003087]"
+          className='flex h-64 w-full items-center justify-center rounded border-2 border-dashed border-[#003087] bg-white px-4 text-lg font-black text-[#003087]'
         >
-          + Add Play
+          + Insert Play
         </button>
       )}
 
-      <EditableText value={labelBottom} onSave={onLabelBottom} className="mt-2 text-xs font-bold uppercase text-[#003087]" />
+      {showBottomLabel ? <EditableText value={labelBottom} onSave={onLabelBottom} className='mt-2 text-xs font-bold uppercase text-[#003087]' /> : null}
 
       {play ? (
-        <button className="absolute right-2 top-2 rounded border-2 border-[#003087] bg-white px-2 text-xs font-black text-[#003087]" onClick={onRemove}>
+        <button className='absolute right-2 top-2 rounded border-2 border-[#003087] bg-white px-2 text-xs font-black text-[#003087]' onClick={onRemove}>
           ×
         </button>
       ) : null}

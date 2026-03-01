@@ -3,21 +3,24 @@
 export const defaultPlayCardLayout: PlayCardLayout = {
   family: '',
   concept: '',
-  playName: 'New Install Sheet',
+  playName: '',
   description: '',
-  diagrams: [{ key: 'a', playId: null, labelTop: '', labelBottom: '' }],
+  diagrams: [
+    { key: 'a', playId: null, labelTop: '', labelBottom: '' },
+    { key: 'b', playId: null, labelTop: '', labelBottom: '' }
+  ],
   assignments: [
-    { position: 'QB', assignment: '' },
-    { position: 'RB', assignment: '' },
-    { position: 'WR (X)', assignment: '' },
-    { position: 'WR (Z)', assignment: '' },
-    { position: 'WR (H)', assignment: '' },
-    { position: 'TE (Y)', assignment: '' },
-    { position: 'LT', assignment: '' },
-    { position: 'LG', assignment: '' },
-    { position: 'C', assignment: '' },
-    { position: 'RG', assignment: '' },
-    { position: 'RT', assignment: '' }
+    { position: 'PST', assignment: '' },
+    { position: 'PSG', assignment: '' },
+    { position: 'OC', assignment: '' },
+    { position: 'BSG', assignment: '' },
+    { position: 'BST', assignment: '' },
+    { position: 'Y', assignment: '' },
+    { position: 'X', assignment: '' },
+    { position: 'Z', assignment: '' },
+    { position: 'H/S', assignment: '' },
+    { position: 'A', assignment: '' },
+    { position: 'QB', assignment: '' }
   ],
   notes: ''
 };
@@ -40,11 +43,11 @@ export function normalizePlayCardLayout(input: unknown): PlayCardLayout {
     concept: raw.concept ?? defaultPlayCardLayout.concept,
     playName: raw.playName ?? defaultPlayCardLayout.playName,
     description: raw.description ?? defaultPlayCardLayout.description,
-    diagrams: diagrams.length > 0 ? diagrams : defaultPlayCardLayout.diagrams,
+    diagrams: diagrams.length > 0 ? diagrams : defaultPlayCardLayout.diagrams.map((d) => ({ ...d })),
     assignments:
       Array.isArray(raw.assignments) && raw.assignments.length > 0
         ? raw.assignments.map((row) => ({ position: row.position ?? '', assignment: row.assignment ?? '' }))
-        : defaultPlayCardLayout.assignments,
+        : defaultPlayCardLayout.assignments.map((r) => ({ ...r })),
     notes: raw.notes ?? defaultPlayCardLayout.notes
   };
 }

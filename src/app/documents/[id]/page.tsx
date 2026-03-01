@@ -64,70 +64,74 @@ export default function DocEdit({ params }: { params: { id: string } }) {
   };
 
   if (loading) {
-    return <main className='p-6 font-black uppercase text-[#003087]'>Loading...</main>;
+    return <main className='flex h-[100dvh] items-center justify-center overflow-hidden p-6 font-black uppercase text-[#003087]'>Loading...</main>;
   }
 
   if (!doc) {
-    return <main className='p-6 font-black uppercase text-[#003087]'>Install Sheet not found.</main>;
+    return <main className='flex h-[100dvh] items-center justify-center overflow-hidden p-6 font-black uppercase text-[#003087]'>Install Sheet not found.</main>;
   }
 
   return (
-    <main className='mx-auto max-w-6xl space-y-3 p-4 md:p-6'>
-      <div className='no-print flex gap-2'>
-        <button
-          className='rounded bg-[#003087] px-3 py-2 font-black uppercase text-white'
-          onClick={() =>
-            fetch(`/api/documents/${params.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(doc)
-            })
-          }
-        >
-          Save
-        </button>
-        <button className='rounded border-2 border-[#003087] px-3 py-2 font-black uppercase text-[#003087]' onClick={() => window.open(`/documents/${params.id}/print`, '_blank')}>
-          Print
-        </button>
+    <main className='h-[100dvh] overflow-hidden p-3 md:p-4'>
+      <div className='mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden'>
+        <div className='no-print flex shrink-0 gap-2'>
+          <button
+            className='rounded bg-[#003087] px-3 py-2 font-black uppercase text-white'
+            onClick={() =>
+              fetch(`/api/documents/${params.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(doc)
+              })
+            }
+          >
+            Save
+          </button>
+          <button className='rounded border-2 border-[#003087] px-3 py-2 font-black uppercase text-[#003087]' onClick={() => window.open(`/documents/${params.id}/print`, '_blank')}>
+            Print
+          </button>
+        </div>
+
+        <div className='min-h-0 flex-1 overflow-auto'>
+          {doc.docType === 'play_card' ? (
+            <PlayCardTemplate
+              layout={normalizePlayCardLayout(doc.layoutData || defaultPlayCardLayout)}
+              playMap={playMap}
+              onChange={(layoutData) => setDoc({ ...doc, layoutData })}
+              onPickPlay={(index) => setPickerIndex(index)}
+            />
+          ) : (
+            <ReferenceSheetTemplate layout={doc.layoutData as ReferenceLayout} playMap={playMap} onChange={(layoutData) => setDoc({ ...doc, layoutData })} />
+          )}
+        </div>
       </div>
 
-      {doc.docType === 'play_card' ? (
-        <PlayCardTemplate
-          layout={normalizePlayCardLayout(doc.layoutData || defaultPlayCardLayout)}
-          playMap={playMap}
-          onChange={(layoutData) => setDoc({ ...doc, layoutData })}
-          onPickPlay={(index) => setPickerIndex(index)}
-        />
-      ) : (
-        <ReferenceSheetTemplate layout={doc.layoutData as ReferenceLayout} playMap={playMap} onChange={(layoutData) => setDoc({ ...doc, layoutData })} />
-      )}
-
       {pickerIndex !== null ? (
-        <div className='no-print fixed inset-0 z-50 flex items-center justify-center bg-[#003087]/95 p-4'>
-          <div className='max-h-[85vh] w-full max-w-5xl overflow-auto rounded border-4 border-[#CC0000] bg-white p-4'>
+        <div className='no-print fixed inset-0 z-50 bg-black/70 p-4'>
+          <div className='mx-auto flex h-full w-full max-w-6xl flex-col rounded border-2 border-[#003087] bg-white p-4'>
             <div className='mb-4 flex items-center justify-between'>
               <h2 className='text-2xl font-black uppercase text-[#003087]'>Select Play</h2>
-              <button type='button' onClick={() => setPickerIndex(null)} className='rounded border-2 border-[#003087] px-3 py-1 font-black uppercase text-[#003087]'>
-                Close
+              <button type='button' onClick={() => setPickerIndex(null)} className='h-11 w-11 rounded border-2 border-[#003087] text-2xl font-black text-[#003087]'>
+                ×
               </button>
             </div>
 
             {plays.length === 0 ? (
-              <div className='rounded border-2 border-[#003087] p-6 text-center'>
-                <p className='font-black uppercase text-[#003087]'>No plays yet — go to Whiteboard to draw some.</p>
-                <Link href='/plays/new' className='mt-3 inline-block rounded bg-[#CC0000] px-4 py-2 font-black uppercase text-white'>
+              <div className='flex flex-1 flex-col items-center justify-center rounded border-2 border-[#003087] p-6 text-center'>
+                <p className='font-black text-[#003087]'>No plays yet — go to Whiteboard to draw some</p>
+                <Link href='/plays/new' className='mt-3 inline-block rounded bg-[#CC0000] px-4 py-3 font-black text-white'>
                   Open Whiteboard
                 </Link>
               </div>
             ) : (
-              <div className='grid gap-3 sm:grid-cols-2 lg:grid-cols-3'>
+              <div className='grid flex-1 auto-rows-min gap-3 overflow-auto sm:grid-cols-2 lg:grid-cols-3'>
                 {plays.map((p) => (
                   <button key={p.id} type='button' onClick={() => selectPlayForSlot(p.id)} className='rounded border-2 border-[#003087] p-3 text-left'>
-                    <div className='mb-2 text-sm font-black uppercase text-[#003087]'>{p.name}</div>
+                    <div className='mb-2 text-sm font-black text-[#003087]'>{p.name}</div>
                     {p.thumbnailSvg ? (
-                      <div className='h-32 w-full overflow-hidden border-2 border-[#CC0000]' dangerouslySetInnerHTML={{ __html: p.thumbnailSvg }} />
+                      <div className='h-32 w-full overflow-hidden border border-[#003087]' dangerouslySetInnerHTML={{ __html: p.thumbnailSvg }} />
                     ) : (
-                      <div className='flex h-32 items-center justify-center border-2 border-[#CC0000] text-xs font-black uppercase text-[#003087]'>No Thumbnail</div>
+                      <div className='flex h-32 items-center justify-center border border-[#003087] text-xs font-black text-[#003087]'>No Thumbnail</div>
                     )}
                   </button>
                 ))}

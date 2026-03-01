@@ -15,125 +15,83 @@ export function PlayCardTemplate({
   onChange: (next: PlayCardLayout) => void;
   onPickPlay?: (diagramIndex: number) => void;
 }) {
-  const sourceRows = layout.assignments.length
-    ? layout.assignments
-    : defaultPlayCardLayout.assignments.map((row) => ({ ...row }));
+  const diagrams = layout.diagrams.length >= 2 ? layout.diagrams.slice(0, 2) : defaultPlayCardLayout.diagrams.map((d, i) => ({ ...d, ...(layout.diagrams[i] || {}) }));
+  const assignments = defaultPlayCardLayout.assignments.map((row, i) => ({ position: row.position, assignment: layout.assignments[i]?.assignment ?? '' }));
 
-  const ensureSecondDiagram = () => {
-    if (layout.diagrams.length >= 2) return layout.diagrams;
-    return [...layout.diagrams, { key: 'b', playId: null, labelTop: '', labelBottom: '' }];
+  const patchDiagram = (index: number, next: Partial<PlayCardLayout['diagrams'][number]>) => {
+    const nextDiagrams = [...diagrams];
+    nextDiagrams[index] = { ...nextDiagrams[index], ...next };
+    onChange({ ...layout, diagrams: nextDiagrams });
   };
 
   return (
-    <div className="space-y-3 bg-white p-3">
-      <div className="flex items-center justify-between rounded bg-[#003087] px-3 py-2 text-white">
-        <div className="flex items-center gap-3">
-          <img src="/sca-logo.png" alt="SCA Eagles" className="h-10 w-10 object-contain" />
-          <div className="text-base font-extrabold uppercase tracking-wide">SCA Eagles Football</div>
+    <div className='space-y-0 border-2 border-[#003087] bg-white'>
+      <div className='grid grid-cols-1 divide-y-2 divide-white bg-[#003087] text-sm font-bold text-white md:grid-cols-[1fr_1fr_2fr] md:divide-x-2 md:divide-y-0'>
+        <div className='px-3 py-2'>
+          <span className='mr-1 font-black'>FAMILY:</span>
+          <EditableText value={layout.family} placeholder='________' onSave={(family) => onChange({ ...layout, family })} className='inline min-h-6' />
         </div>
-        <div className="text-sm font-black uppercase tracking-wide">Install Sheet</div>
-      </div>
-
-      <div className="flex justify-between bg-[#CC0000] p-2 text-sm font-extrabold uppercase text-white">
-        <EditableText value={`Family: ${layout.family}`} onSave={(v) => onChange({ ...layout, family: v.replace('Family: ', '') })} />
-        <EditableText value={`Concept: ${layout.concept}`} onSave={(v) => onChange({ ...layout, concept: v.replace('Concept: ', '') })} />
-      </div>
-
-      <EditableText value={layout.playName} onSave={(playName) => onChange({ ...layout, playName })} className="text-4xl font-black uppercase text-[#CC0000]" />
-      <EditableText value={layout.description} onSave={(description) => onChange({ ...layout, description })} className="text-sm font-bold uppercase text-[#003087]" />
-
-      <div className="space-y-3">
-        {layout.diagrams.map((d, i) => (
-          <DiagramSlot
-            key={d.key}
-            play={d.playId ? playMap.get(d.playId) : undefined}
-            labelTop={d.labelTop}
-            labelBottom={d.labelBottom}
-            onLabelTop={(v) => {
-              const diagrams = [...layout.diagrams];
-              diagrams[i] = { ...d, labelTop: v };
-              onChange({ ...layout, diagrams });
-            }}
-            onLabelBottom={(v) => {
-              const diagrams = [...layout.diagrams];
-              diagrams[i] = { ...d, labelBottom: v };
-              onChange({ ...layout, diagrams });
-            }}
-            onRemove={() => {
-              const diagrams = [...layout.diagrams];
-              diagrams[i] = { ...d, playId: null };
-              onChange({ ...layout, diagrams });
-            }}
-            onAddPlay={() => onPickPlay?.(i)}
-          />
-        ))}
-      </div>
-
-      <div className="no-print flex justify-end">
-        {layout.diagrams.length < 2 ? (
-          <button
-            type="button"
-            onClick={() => onChange({ ...layout, diagrams: ensureSecondDiagram() })}
-            className="rounded bg-[#003087] px-3 py-2 text-sm font-black uppercase text-white"
-          >
-            Add second diagram +
-          </button>
-        ) : null}
-      </div>
-
-      <div className="rounded border-2 border-[#003087]">
-        <div className="grid grid-cols-[170px_1fr_48px] bg-[#003087] p-2 text-xs font-black uppercase text-white">
-          <div>Position</div>
-          <div>Assignment</div>
-          <div />
+        <div className='px-3 py-2'>
+          <span className='mr-1 font-black'>CONCEPT:</span>
+          <EditableText value={layout.concept} placeholder='________' onSave={(concept) => onChange({ ...layout, concept })} className='inline min-h-6' />
         </div>
-        {sourceRows.map((r, i) => (
-          <div key={`${r.position}-${i}`} className="grid grid-cols-[170px_1fr_48px] border-t-2 border-[#003087] bg-white p-2 text-sm">
-            <EditableText
-              value={r.position}
-              onSave={(v) => {
-                const next = [...sourceRows];
-                next[i] = { ...r, position: v };
-                onChange({ ...layout, assignments: next });
-              }}
-              className="font-extrabold uppercase text-[#003087]"
+        <div className='px-3 py-2'>
+          <EditableText value={layout.description} placeholder='description' onSave={(description) => onChange({ ...layout, description })} className='min-h-6' />
+        </div>
+      </div>
+
+      <div className='border-t-2 border-[#003087] px-3 py-3 text-3xl font-black text-[#CC0000]'>
+        <span className='mr-2'>PLAY:</span>
+        <EditableText value={layout.playName} placeholder='____________________' onSave={(playName) => onChange({ ...layout, playName })} className='inline' />
+      </div>
+
+      <div className='grid grid-cols-1 border-y-2 border-[#003087] md:grid-cols-2'>
+        {diagrams.map((d, i) => (
+          <div key={d.key} className={i === 0 ? 'border-b-2 border-[#003087] md:border-b-0 md:border-r-2' : ''}>
+            <DiagramSlot
+              play={d.playId ? playMap.get(d.playId) : undefined}
+              labelTop={d.labelTop}
+              labelBottom={d.labelBottom}
+              showBottomLabel={false}
+              onLabelTop={(v) => patchDiagram(i, { labelTop: v })}
+              onLabelBottom={(v) => patchDiagram(i, { labelBottom: v })}
+              onRemove={() => patchDiagram(i, { playId: null })}
+              onAddPlay={() => onPickPlay?.(i)}
             />
-            <EditableText
-              value={r.assignment}
-              onSave={(v) => {
-                const next = [...sourceRows];
-                next[i] = { ...r, assignment: v };
-                onChange({ ...layout, assignments: next });
-              }}
-              className="font-semibold text-[#003087]"
-            />
-            <button
-              type="button"
-              onClick={() => {
-                const next = sourceRows.filter((_, idx) => idx !== i);
-                onChange({ ...layout, assignments: next });
-              }}
-              className="rounded border-2 border-[#CC0000] px-2 text-sm font-black text-[#CC0000]"
-            >
-              ×
-            </button>
           </div>
         ))}
       </div>
 
-      <div className="no-print flex justify-start">
-        <button
-          type="button"
-          onClick={() => onChange({ ...layout, assignments: [...sourceRows, { position: 'NEW', assignment: '' }] })}
-          className="rounded bg-[#CC0000] px-3 py-2 text-sm font-black uppercase text-white"
-        >
-          Add Position +
-        </button>
+      <div className='border-b-2 border-[#003087]'>
+        <div className='grid grid-cols-[120px_1fr] bg-[#003087] px-3 py-2 text-sm font-black text-white'>
+          <div>POSITION</div>
+          <div>ASSIGNMENT</div>
+        </div>
+        {assignments.map((row, i) => (
+          <div key={`${row.position}-${i}`} className='grid grid-cols-[120px_1fr] border-t border-[#003087] px-3 py-2 text-sm'>
+            <div className='font-black text-[#003087]'>{row.position}</div>
+            <EditableText
+              value={row.assignment}
+              placeholder=''
+              onSave={(assignment) => {
+                const next = [...assignments];
+                next[i] = { ...next[i], assignment };
+                onChange({ ...layout, assignments: next });
+              }}
+              className='font-semibold text-[#003087]'
+            />
+          </div>
+        ))}
       </div>
 
-      <div>
-        <div className="mb-1 text-xs font-black uppercase text-[#003087]">Notes</div>
-        <EditableText value={layout.notes} onSave={(notes) => onChange({ ...layout, notes })} className="min-h-16 rounded border-2 border-[#003087] p-2 text-sm font-semibold text-[#003087]" />
+      <div className='px-3 py-2'>
+        <div className='mb-2 text-sm font-black text-[#003087]'>NOTES</div>
+        <EditableText
+          value={layout.notes}
+          onSave={(notes) => onChange({ ...layout, notes })}
+          multiline
+          className='min-h-20 w-full border border-[#003087] p-2 text-sm font-semibold text-[#003087]'
+        />
       </div>
     </div>
   );

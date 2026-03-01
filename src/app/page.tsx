@@ -37,34 +37,31 @@ function ModeCard({ href, title, description, kind, red }: { href: string; title
 
 export default function HomePage() {
   return (
-    <main className="app-screen relative text-white">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(to bottom, rgba(0,48,135,0.88) 0%, rgba(0,0,0,0.80) 100%), url('/sca-team-champs.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      />
+    <main
+      style={{ backgroundImage: "url('/sca-team-champs.jpg')" }}
+      className="relative min-h-screen bg-cover bg-center flex flex-col text-white"
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-[#003087]/88 to-black/80" />
 
-      <div className="relative mx-auto flex h-full w-full max-w-6xl flex-col items-center px-4 py-4 text-center md:px-8 md:py-6">
-        <img src="/sca-logo.png" alt="SCA Eagles" className="mb-2 h-20 w-20 object-contain md:mb-3 md:h-28 md:w-28" />
-        <h1 className="text-3xl font-black uppercase tracking-wide md:text-5xl">SCA Eagles Football</h1>
-        <p className="mt-1 text-2xl font-extrabold tracking-[0.1em] text-[#CC0000] md:text-3xl">ChalkTalk</p>
+      <div className="relative z-10 flex flex-col items-center justify-between h-screen px-6 py-8 text-center">
+        <div className="flex flex-col items-center gap-2 pt-4">
+          <img src="/sca-logo.png" alt="SCA Eagles" className="h-20 w-20 object-contain md:h-28 md:w-28" />
+          <h1 className="text-3xl font-black uppercase tracking-wide md:text-5xl">SCA Eagles Football</h1>
+          <p className="text-2xl font-extrabold tracking-[0.1em] text-[#CC0000] md:text-3xl">ChalkTalk</p>
+        </div>
 
-        <div className="mt-4 grid w-full max-w-5xl gap-3 md:mt-6 md:gap-4 md:grid-cols-2">
+        <div className="flex flex-col gap-4 w-full max-w-md">
           <ModeCard href="/plays/new" title="Whiteboard" description="Draw and diagram plays" kind="whiteboard" red />
           <ModeCard href="/documents" title="Install Sheets" description="Build teaching documents" kind="documents" />
         </div>
 
-        <Link href="/plays" className="mt-3 text-xs font-extrabold tracking-wider text-white/60 md:mt-4 md:text-sm">
-          Play Library ?
-        </Link>
-
-        <p className="mt-auto pt-3 text-xs italic text-white/95 md:pt-5 md:text-sm">“Here am I. Send me!” — Isaiah 6:8</p>
+        <div className="flex flex-col items-center gap-3 pb-4">
+          <Link href="/plays" className="text-white/60 text-sm hover:text-white/90 transition-colors mt-4">
+            Play Library →
+          </Link>
+          <p className="text-white/40 text-xs italic text-center">"Here am I. Send me!" — Isaiah 6:8</p>
+        </div>
       </div>
     </main>
   );
 }
-

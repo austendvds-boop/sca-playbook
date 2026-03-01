@@ -4,7 +4,16 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { defaultPlayCardLayout } from '@/lib/installSheet';
 
-type Doc = { id: string; name: string; docType: string; updatedAt: string; layoutData?: { diagrams?: Array<{ playId: string | null }> } };
+type Doc = {
+  id: string;
+  name: string;
+  docType: string;
+  updatedAt: string;
+  layoutData?: {
+    playName?: string;
+    diagrams?: Array<{ playId: string | null }>;
+  };
+};
 type Play = { id: string; name: string };
 
 export default function DocumentsPage() {
@@ -22,6 +31,19 @@ export default function DocumentsPage() {
   }, []);
 
   const playMap = useMemo(() => new Map(plays.map((p) => [p.id, p.name])), [plays]);
+
+  const removeDoc = async (id: string) => {
+    const confirmed = window.confirm('Delete this install sheet? This cannot be undone.');
+    if (!confirmed) return;
+
+    const r = await fetch(`/api/documents/${id}`, { method: 'DELETE' });
+    if (!r.ok) {
+      alert('Failed to delete install sheet. Please try again.');
+      return;
+    }
+
+    setDocs((prev) => prev.filter((d) => d.id !== id));
+  };
 
   const createDoc = async (docType: 'play_card' | 'reference_sheet') => {
     const r = await fetch('/api/documents', {
@@ -77,13 +99,27 @@ export default function DocumentsPage() {
         ) : (
           <div className='grid gap-3 pr-1'>
             {docs.map((d) => {
+              const playName = d.layoutData?.playName?.trim() || '';
               const assignedPlayId = d.layoutData?.diagrams?.find((x) => x.playId)?.playId ?? null;
-              const assignedPlayName = assignedPlayId ? playMap.get(assignedPlayId) : null;
+              const assignedPlayName = playName || (assignedPlayId ? playMap.get(assignedPlayId) || '' : '');
+              const cardTitle = playName || 'Untitled Install Sheet';
+
               return (
-                <Link key={d.id} href={`/documents/${d.id}`} className='rounded border-2 border-[#003087] bg-white p-3'>
-                  <div className='text-lg font-black uppercase text-[#003087]'>{d.name}</div>
-                  <div className='text-sm font-bold uppercase text-[#CC0000]'>{assignedPlayName ? `Play: ${assignedPlayName}` : 'Play: Not assigned'}</div>
-                </Link>
+                <div key={d.id} className='rounded border-2 border-[#003087] bg-white p-3'>
+                  <Link href={`/documents/${d.id}`} className='block'>
+                    <div className='text-lg font-black uppercase text-[#003087]'>{cardTitle}</div>
+                    <div className='text-sm font-bold uppercase text-[#CC0000]'>{assignedPlayName ? `Play: ${assignedPlayName}` : 'Play: Not assigned'}</div>
+                  </Link>
+                  <div className='mt-3 flex justify-end'>
+                    <button
+                      type='button'
+                      onClick={() => void removeDoc(d.id)}
+                      className='rounded border-2 border-red-700 px-3 py-1 text-xs font-black uppercase text-red-700 hover:bg-red-50'
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               );
             })}
           </div>

@@ -9,7 +9,7 @@ import { elementsAtom, selectedIdsAtom, undoStackAtom, redoStackAtom } from '@/a
 import { offensePresets, defensePresets } from '@/lib/presets';
 import { CanvasElement } from '@/lib/store';
 
-const FIELD_CENTER = { x: 500, y: 280 };
+const FIELD_CENTER = { x: 500, y: 320 };
 
 export default function NewPlay() {
   const [name, setName] = useState('New Play');
@@ -47,11 +47,11 @@ export default function NewPlay() {
 
   const insertOLGroup = () => {
     const group: CanvasElement[] = [
-      { id: uuid(), type: 'player', x: 380, y: 280, position: 'LT', side: 'offense' },
-      { id: uuid(), type: 'player', x: 440, y: 280, position: 'LG', side: 'offense' },
-      { id: uuid(), type: 'player', x: 500, y: 280, position: 'C', side: 'offense' },
-      { id: uuid(), type: 'player', x: 560, y: 280, position: 'RG', side: 'offense' },
-      { id: uuid(), type: 'player', x: 620, y: 280, position: 'RT', side: 'offense' }
+      { id: uuid(), type: 'player', x: 380, y: 320, position: 'LT', side: 'offense' },
+      { id: uuid(), type: 'player', x: 440, y: 320, position: 'LG', side: 'offense' },
+      { id: uuid(), type: 'player', x: 500, y: 320, position: 'C', side: 'offense' },
+      { id: uuid(), type: 'player', x: 560, y: 320, position: 'RG', side: 'offense' },
+      { id: uuid(), type: 'player', x: 620, y: 320, position: 'RT', side: 'offense' }
     ];
     setElements((prev) => {
       const next = new Map(prev);

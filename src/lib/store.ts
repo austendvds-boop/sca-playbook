@@ -123,10 +123,14 @@ const samplePlay = (id: string, name: string, offset = 0): Play => ({
   tags: ['general'],
   situation: 'general',
   canvasData: [
-    { id: `${id}-c`, type: 'player', x: 400 + offset, y: 340, position: 'C', side: 'offense' },
-    { id: `${id}-qb`, type: 'player', x: 400 + offset, y: 390, position: 'QB', side: 'offense' },
-    { id: `${id}-x`, type: 'player', x: 180 + offset, y: 260, position: 'X', side: 'offense' },
-    { id: `${id}-r1`, type: 'route', points: [{ x: 180 + offset, y: 260 }, { x: 180 + offset, y: 130 }], color: '#111827', lineStyle: 'route' }
+    { id: `${id}-lt`, type: 'player', x: 280 + offset, y: 320, position: 'LT', side: 'offense' },
+    { id: `${id}-lg`, type: 'player', x: 340 + offset, y: 320, position: 'LG', side: 'offense' },
+    { id: `${id}-c`, type: 'player', x: 400 + offset, y: 320, position: 'C', side: 'offense' },
+    { id: `${id}-rg`, type: 'player', x: 460 + offset, y: 320, position: 'RG', side: 'offense' },
+    { id: `${id}-rt`, type: 'player', x: 520 + offset, y: 320, position: 'RT', side: 'offense' },
+    { id: `${id}-qb`, type: 'player', x: 400 + offset, y: 355, position: 'QB', side: 'offense' },
+    { id: `${id}-x`, type: 'player', x: 180 + offset, y: 320, position: 'X', side: 'offense' },
+    { id: `${id}-r1`, type: 'route', points: [{ x: 180 + offset, y: 320 }, { x: 180 + offset, y: 130 }], color: '#111827', lineStyle: 'route' }
   ],
   updatedAt: new Date().toISOString()
 });

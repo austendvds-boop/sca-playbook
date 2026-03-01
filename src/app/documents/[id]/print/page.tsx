@@ -44,7 +44,7 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
         <div className='px-3 py-2'>{layout.description || ' '}</div>
       </div>
 
-      <h1 className='mb-3 text-3xl font-black text-[#CC0000]'>PLAY: {layout.playName || doc.name}</h1>
+      <h1 className='mb-3 text-3xl font-black text-[#CC0000]'>PLAY: {layout.playName || ' '}</h1>
 
       <section className='mb-3 grid grid-cols-2 border-2 border-[#003087]'>
         {diagrams.map((diagram, i) => {

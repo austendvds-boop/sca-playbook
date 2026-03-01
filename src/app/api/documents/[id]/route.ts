@@ -75,3 +75,18 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
   }
 }
 
+export async function DELETE(_: Request, ctx: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await ctx.params;
+    const db = getDb();
+    const [deleted] = await db.delete(documents).where(eq(documents.id, id)).returning();
+
+    if (!deleted) return NextResponse.json({ data: null, error: 'Document not found' }, { status: 404 });
+
+    return NextResponse.json({ data: true });
+  } catch (error) {
+    console.error('DELETE /api/documents/[id] failed', error);
+    return NextResponse.json({ data: null, error: 'Failed to delete document' }, { status: 500 });
+  }
+}
+

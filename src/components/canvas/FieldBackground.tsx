@@ -1,7 +1,7 @@
 export function FieldBackground() {
   const W = 1000;
   const H = 560;
-  const LOS = 280;
+  const LOS = 320;
 
   return (
     <>

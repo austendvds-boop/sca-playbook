@@ -199,13 +199,7 @@ export function CanvasToolbar({
         </div>
 
         <div className="relative flex items-center gap-1">
-          <button onClick={onUndo} disabled={!canUndo} className="p-1.5 rounded disabled:opacity-30 text-white hover:bg-white/10" aria-label="Undo">
-            <Undo2 className="w-4 h-4" />
-          </button>
-          <button onClick={onRedo} disabled={!canRedo} className="p-1.5 rounded disabled:opacity-30 text-white hover:bg-white/10" aria-label="Redo">
-            <Redo2 className="w-4 h-4" />
-          </button>
-          <button onClick={onSave} className="rounded-md p-2 text-[#CC0000] hover:bg-white/10" aria-label="Save play">
+<button onClick={onSave} className="rounded-md p-2 text-[#CC0000] hover:bg-white/10" aria-label="Save play">
             <Save className="h-4 w-4" />
           </button>
           <button onClick={() => setMenuOpen((v) => !v)} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="More options">
@@ -276,6 +270,25 @@ export function CanvasToolbar({
 
       <footer className="no-print z-30 flex h-[52px] flex-shrink-0 items-center justify-between border-t border-white/10 bg-[#0A0A1A] px-2 pb-safe text-white">
         <div className="flex items-center gap-1 overflow-x-auto pr-2">
+          <button
+            onClick={onUndo}
+            disabled={!onUndo || !canUndo}
+            title="Undo"
+            className="flex flex-col items-center gap-0.5 rounded-md px-1.5 py-1 text-slate-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            <Undo2 className="h-4 w-4" />
+            <span className="text-[8px] uppercase tracking-wide opacity-60 leading-none">UNDO</span>
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!onRedo || !canRedo}
+            title="Redo"
+            className="flex flex-col items-center gap-0.5 rounded-md px-1.5 py-1 text-slate-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            <Redo2 className="h-4 w-4" />
+            <span className="text-[8px] uppercase tracking-wide opacity-60 leading-none">REDO</span>
+          </button>
+
           {tools.map((t) => {
             const Icon = t.icon;
             const activeClass = active === t.key ? 'bg-[#CC0000] text-white' : 'bg-transparent text-slate-300 hover:bg-white/10';
@@ -306,4 +319,6 @@ export function CanvasToolbar({
     </>
   );
 }
+
+
 

@@ -19,6 +19,7 @@ export type LineElement = {
   color: string;
   lineStyle: 'route' | 'zigzag' | 'tbar' | 'dashed_route';
   fromPlayerId?: string;
+  noArrow?: boolean;
 };
 
 export type TextElement = {
@@ -173,5 +174,8 @@ if (!g.__scaStore) {
 
 export const store = g.__scaStore;
 export const makeDefaultDocLayout = (docType: 'play_card' | 'reference_sheet') => (docType === 'reference_sheet' ? defaultRefSheet() : defaultPlayCard());
+
+
+
 
 

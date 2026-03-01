@@ -164,10 +164,11 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
           const tbar = lineStyle === 'tbar' ? tBarData(el.points) : null;
           const isSelected = selectedIds?.has(el.id);
           const stroke = isSelected ? '#f59e0b' : '#111';
+          const markerEnd = lineStyle === 'tbar' || el.noArrow ? undefined : 'url(#arrow-open)';
           return (
             <g key={el.id} onPointerDown={(evt) => onLinePointerDown?.(el.id, evt)}>
-              <path d={d} fill="none" stroke="transparent" strokeWidth={16} strokeLinecap="round" strokeLinejoin="round" markerEnd={lineStyle === 'tbar' ? undefined : 'url(#arrow-open)'} />
-              <path d={d} fill="none" stroke={stroke} strokeWidth={2.5} strokeDasharray={lineStyle === 'dashed_route' ? '8 5' : undefined} markerEnd={lineStyle === 'tbar' ? undefined : 'url(#arrow-open)'} strokeLinecap="round" strokeLinejoin="round" />
+              <path d={d} fill="none" stroke="transparent" strokeWidth={16} strokeLinecap="round" strokeLinejoin="round" markerEnd={markerEnd} />
+              <path d={d} fill="none" stroke={stroke} strokeWidth={2.5} strokeDasharray={lineStyle === 'dashed_route' ? '8 5' : undefined} markerEnd={markerEnd} strokeLinecap="round" strokeLinejoin="round" />
               {tbar ? (<><line x1={tbar.x1} y1={tbar.y1} x2={tbar.x2} y2={tbar.y2} stroke="transparent" strokeWidth={16} /><line x1={tbar.x1} y1={tbar.y1} x2={tbar.x2} y2={tbar.y2} stroke={stroke} strokeWidth={2.5} /></>) : null}
             </g>
           );
@@ -177,6 +178,9 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
     </svg>
   );
 }
+
+
+
 
 
 

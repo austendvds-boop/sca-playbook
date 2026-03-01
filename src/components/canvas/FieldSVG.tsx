@@ -80,7 +80,7 @@ export function FieldSVG() {
     if (tool === 'zone') {
       // Zone: commit the line + spawn small ellipse at the tip
       const lastPt = simplified[simplified.length - 1];
-      const lineEl: LineElement = { id: uuid(), type: 'route', lineStyle: 'route', points: simplified, color: '#111' };
+      const lineEl: LineElement = { id: uuid(), type: 'route', lineStyle: 'route', points: simplified, color: '#111', noArrow: true };
       next.set(lineEl.id, lineEl);
       const zoneEl: ZoneElement = { id: uuid(), type: 'zone', cx: lastPt.x, cy: lastPt.y, rx: 28, ry: 20, color: '#f59e0b', opacity: 0.45 };
       next.set(zoneEl.id, zoneEl);
@@ -214,3 +214,4 @@ export function FieldSVG() {
     </div>
   );
 }
+

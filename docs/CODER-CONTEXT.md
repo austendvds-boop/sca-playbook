@@ -293,3 +293,78 @@ Implemented and verified all requested fixes:
   - POST `/api/plays` created play id
   - POST `/api/plays/{id}/duplicate` created duplicate id
   - both ids returned by subsequent GET `/api/plays`
+
+## 2026-03-04 Comprehensive code review + fix pass
+
+### Git/branch note
+- Requested `git pull origin main` failed because this repo currently tracks `master` only (`origin/main` does not exist).
+- Pulled latest from `origin/master` before starting edits.
+
+### Build status
+- Command: `npm run build`
+- Result: ✅ Success (Next.js build + TypeScript passed)
+
+### Commit
+- Branch: `main`
+- Commit: `c679079`
+- Push: `origin/main`
+
+### Review/fix summary by checklist
+1. **Type safety**
+   - Removed all `any` usage from persistence layer by introducing typed row models (`PlayRow`, `FolderRow`) and safer parsing in `src/lib/playPersistence.ts`.
+   - Added structured request-body parsing for play/folder API routes to avoid untyped `req.json()` usage.
+2. **React best practices**
+   - Hardened async data loading with cancellation flags and explicit error paths in:
+     - `src/app/plays/[id]/page.tsx`
+     - `src/app/plays/page.tsx`
+     - `src/app/documents/[id]/page.tsx`
+   - Stabilized undo/redo event listener lifecycle in play editor via `useCallback` + effect deps.
+3. **Jotai state**
+   - Added architectural TODO in `src/atoms/canvas.ts` to migrate global canvas atoms to per-play atom families (too risky to change in this pass).
+4. **SVG Canvas**
+   - Fixed a drag lifecycle edge case in `FieldSVG` where `dragRef` could remain set on pointer-up without movement.
+   - Used functional state update for viewport touch adjustments to avoid stale closure writes.
+5. **Database queries/indexes**
+   - Added missing indexes for persistence tables in `ensureTables()`:
+     - `idx_plays_app_updated_at`
+     - `idx_plays_app_folder_id`
+     - `idx_folders_app_name`
+6. **Error handling**
+   - Wrapped all play/folder/seed API handlers in try/catch with 500 responses and server logs.
+   - Added better client-side fetch failure handling and user feedback in play/document screens.
+7. **Accessibility**
+   - Improved keyboard accessibility for `EditableText` trigger (`Enter` + `Space`, aria-label).
+   - Added explicit `type="button"` and aria labels in key interactive controls where missing.
+8. **Dead code**
+   - Removed unused `defaultPlayCardLayout` import from `src/app/api/documents/route.ts`.
+9. **Security**
+   - Replaced raw `dangerouslySetInnerHTML` SVG rendering with a safer data-URL image path via new `SafeSvgPreview` component.
+10. **Performance**
+   - Parallelized related fetches on list/editor screens using `Promise.all`.
+   - Switched repeated logo `<img>` usage to Next `Image` for optimized loading in core screens.
+
+### Additional quality fixes
+- New-play canvas now uses the same undo/redo snapshot discipline as edit mode (deep clone + history cap).
+
+### Files touched
+- `src/lib/playPersistence.ts`
+- `src/app/api/plays/route.ts`
+- `src/app/api/plays/[id]/route.ts`
+- `src/app/api/plays/[id]/duplicate/route.ts`
+- `src/app/api/folders/route.ts`
+- `src/app/api/folders/[id]/route.ts`
+- `src/app/api/seed/route.ts`
+- `src/app/api/documents/route.ts`
+- `src/app/plays/page.tsx`
+- `src/app/plays/[id]/page.tsx`
+- `src/app/plays/new/page.tsx`
+- `src/app/documents/[id]/page.tsx`
+- `src/components/shared/SafeSvgPreview.tsx` (new)
+- `src/components/shared/EditableText.tsx`
+- `src/components/canvas/FieldSVG.tsx`
+- `src/components/canvas/CanvasToolbar.tsx`
+- `src/components/ConditionalNav.tsx`
+- `src/app/page.tsx`
+- `src/app/documents/[id]/print/page.tsx`
+- `src/atoms/canvas.ts`
+- `docs/CODER-CONTEXT.md`

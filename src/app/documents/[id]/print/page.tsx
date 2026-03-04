@@ -1,4 +1,5 @@
 "use client";
+import Image from 'next/image';
 import { use, useEffect, useMemo, useState } from 'react';
 import { DocumentRec, Play } from '@/lib/store';
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
@@ -40,7 +41,7 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
       </div>
 
       <header className='mb-3 flex items-center justify-between bg-[#003087] px-4 py-3 text-white'>
-        <img src='/sca-logo.png' alt='SCA Eagles' className='h-12 w-12 object-contain' />
+        <Image src='/sca-logo.png' alt='SCA Eagles' width={48} height={48} className='h-12 w-12 object-contain' />
         <div className='text-right text-sm font-black uppercase tracking-wide'>SCA Eagles Football — Install Sheet</div>
       </header>
 

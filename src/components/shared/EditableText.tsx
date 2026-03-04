@@ -37,7 +37,19 @@ export function EditableText({
 
   if (!editing) {
     return (
-      <div className={className} onClick={() => setEditing(true)} role='button' tabIndex={0} onKeyDown={(e) => (e.key === 'Enter' ? setEditing(true) : null)}>
+      <div
+        className={className}
+        onClick={() => setEditing(true)}
+        role='button'
+        tabIndex={0}
+        aria-label={placeholder || 'Editable text'}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setEditing(true);
+          }
+        }}
+      >
         {value ? value : <span className={placeholderClassName}>{placeholder || ' '}</span>}
       </div>
     );

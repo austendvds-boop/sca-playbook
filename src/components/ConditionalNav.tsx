@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -24,7 +25,7 @@ export function ConditionalNav() {
   return (
     <nav style={{ background: '#003087' }} className="no-print flex h-16 items-center px-4 md:px-6">
       <div className="mr-5 flex items-center gap-3">
-        <img src="/sca-logo.png" alt="SCA Eagles" className="h-11 w-11 object-contain" />
+        <Image src="/sca-logo.png" alt="SCA Eagles" width={44} height={44} className="h-11 w-11 object-contain" />
       </div>
 
       <div className="flex items-center gap-4 md:gap-6">

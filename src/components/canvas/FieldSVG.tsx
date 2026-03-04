@@ -158,13 +158,16 @@ export function FieldSVG() {
 
   const onPointerUp = (evt: React.PointerEvent<SVGSVGElement>) => {
     const p = svgPoint(evt);
-    if (dragRef.current && draggingPlayer) {
-      const hit = elements.get(dragRef.current.id);
-      if (hit?.type === 'player') {
-        const next = new Map(elements);
-        next.set(hit.id, { ...hit, x: draggingPlayer.x, y: draggingPlayer.y });
-        commit(next);
+    if (dragRef.current) {
+      if (draggingPlayer) {
+        const hit = elements.get(dragRef.current.id);
+        if (hit?.type === 'player') {
+          const next = new Map(elements);
+          next.set(hit.id, { ...hit, x: draggingPlayer.x, y: draggingPlayer.y });
+          commit(next);
+        }
       }
+
       dragRef.current = null;
       setDraggingPlayer(null);
       return;
@@ -216,7 +219,9 @@ export function FieldSVG() {
           if (tool === 'select') setSelected(new Set([id]));
         }}
         onBackgroundPointerDown={(evt) => {
-          if (evt.pointerType === 'touch' && evt.isPrimary === false) setViewport({ ...viewport, x: viewport.x + 3, y: viewport.y + 3 });
+          if (evt.pointerType === 'touch' && evt.isPrimary === false) {
+            setViewport((prev) => ({ ...prev, x: prev.x + 3, y: prev.y + 3 }));
+          }
           if (isLineTool(tool)) {
             startFreehand(evt, svgPoint(evt));
             return;

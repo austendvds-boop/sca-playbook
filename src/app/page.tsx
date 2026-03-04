@@ -1,4 +1,5 @@
 "use client";
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -55,7 +56,7 @@ export default function HomePage() {
 
       <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 py-8 text-center">
         <div className="flex flex-col items-center gap-2 pt-4">
-          <img src="/sca-logo.png" alt="SCA Eagles" className="h-20 w-20 object-contain md:h-28 md:w-28" />
+          <Image src="/sca-logo.png" alt="SCA Eagles" width={112} height={112} className="h-20 w-20 object-contain md:h-28 md:w-28" priority />
           <h1 className="text-3xl font-black uppercase tracking-wide md:text-5xl">SCA Eagles Football</h1>
           <p className="text-2xl font-extrabold tracking-[0.1em] text-[#CC0000] md:text-3xl">ChalkTalk</p>
         </div>

@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useMemo, useState } from 'react';
 import { useAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
@@ -10,6 +11,16 @@ import { offensePresets, defensePresets } from '@/lib/presets';
 import { CanvasElement } from '@/lib/store';
 
 const FIELD_CENTER = { x: 500, y: 320 };
+const MAX_HISTORY = 50;
+
+const cloneElement = (el: CanvasElement): CanvasElement => {
+  if (el.type === 'player') return { ...el };
+  if (el.type === 'text') return { ...el };
+  if (el.type === 'zone') return { ...el };
+  return { ...el, points: el.points.map((p) => ({ ...p })) };
+};
+
+const snapshotFromMap = (map: Map<string, CanvasElement>) => [...map.values()].map(cloneElement);
 
 export default function NewPlay() {
   const [name, setName] = useState('New Play');
@@ -29,19 +40,35 @@ export default function NewPlay() {
   const offensePresetNames = useMemo(() => offensePresets.map((p) => p.name), []);
   const defensePresetNames = useMemo(() => defensePresets.map((p) => p.name), []);
 
+  const applyCanvasChange = (updater: (prev: Map<string, CanvasElement>) => Map<string, CanvasElement>) => {
+    setUndo((prev) => [...prev, snapshotFromMap(elements)].slice(-MAX_HISTORY));
+    setRedo([]);
+    setElements((prev) => updater(prev));
+  };
+
   const save = async () => {
     const res = await fetch('/api/plays', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, canvasData: [...elements.values()], tags: ['general'] })
     });
+    if (!res.ok) {
+      window.alert('Failed to save play. Please try again.');
+      return;
+    }
+
     const d = await res.json();
+    if (!d?.data?.id) {
+      window.alert('Failed to save play. Please try again.');
+      return;
+    }
+
     router.push(`/plays/${d.data.id}`);
   };
 
   const insertPlayer = ({ label, side }: { label: string; side: 'offense' | 'defense' }) => {
     const player: CanvasElement = { id: uuid(), type: 'player', x: FIELD_CENTER.x, y: FIELD_CENTER.y, position: label, side };
-    setElements((prev) => new Map(prev).set(player.id, player));
+    applyCanvasChange((prev) => new Map(prev).set(player.id, player));
     setSelected(new Set([player.id]));
   };
 
@@ -53,11 +80,13 @@ export default function NewPlay() {
       { id: uuid(), type: 'player', x: 540, y: 320, position: 'RG', side: 'offense' },
       { id: uuid(), type: 'player', x: 580, y: 320, position: 'RT', side: 'offense' }
     ];
-    setElements((prev) => {
+
+    applyCanvasChange((prev) => {
       const next = new Map(prev);
       group.forEach((el) => next.set(el.id, el));
       return next;
     });
+
     setSelected(new Set(group.map((el) => el.id)));
   };
 
@@ -69,16 +98,13 @@ export default function NewPlay() {
     if (side === 'defense') {
       const confirmed = window.confirm(`Start a new play with ${preset.name} defense?`);
       if (!confirmed) return;
-      setElements(new Map());
-      setSelected(new Set());
-      setUndo([]);
-      setRedo([]);
       const next = new Map<string, CanvasElement>();
       preset.elements.forEach((el) => {
         const id = uuid();
         next.set(id, el.type === 'player' ? { ...el, id, side: 'defense' } : { ...el, id });
       });
-      setElements(next);
+      applyCanvasChange(() => next);
+      setSelected(new Set());
       return;
     }
 
@@ -86,46 +112,50 @@ export default function NewPlay() {
       const confirmed = window.confirm(`Replace current play with ${presetName}?`);
       if (!confirmed) return;
     }
+
     const next = new Map<string, CanvasElement>();
     preset.elements.forEach((el) => {
       const id = uuid();
       next.set(id, { ...el, id });
     });
-    setElements(next);
+
+    applyCanvasChange(() => next);
     setSelected(new Set());
   };
 
   const handleUndo = () => {
     if (undoStack.length === 0) return;
-    const prev = undoStack[undoStack.length - 1];
-    setUndo(undoStack.slice(0, -1));
-    setRedo([...redoStack, [...elements.values()]]);
+    const prev = undoStack[undoStack.length - 1].map(cloneElement);
+    setUndo((stack) => stack.slice(0, -1));
+    setRedo((stack) => [...stack, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setElements(new Map(prev.map((el) => [el.id, el])));
     setSelected(new Set());
   };
 
   const handleRedo = () => {
     if (redoStack.length === 0) return;
-    const next = redoStack[redoStack.length - 1];
-    setRedo(redoStack.slice(0, -1));
-    setUndo([...undoStack, [...elements.values()]]);
+    const next = redoStack[redoStack.length - 1].map(cloneElement);
+    setRedo((stack) => stack.slice(0, -1));
+    setUndo((stack) => [...stack, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setElements(new Map(next.map((el) => [el.id, el])));
     setSelected(new Set());
   };
 
   const deleteSelected = () => {
     if (selected.size === 0) return;
-    setElements((prev) => {
+
+    applyCanvasChange((prev) => {
       const next = new Map(prev);
       selected.forEach((id) => next.delete(id));
       return next;
     });
+
     setSelected(new Set());
   };
 
   return (
     <main className="w-screen overflow-hidden bg-[#111124] text-white" style={{ height: '100dvh' }}>
-      <div className="flex w-screen flex-col overflow-hidden h-dvh">
+      <div className="flex h-dvh w-screen flex-col overflow-hidden">
         <CanvasToolbar
           name={name}
           onNameChange={setName}

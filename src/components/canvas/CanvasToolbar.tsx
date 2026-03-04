@@ -1,5 +1,6 @@
 "use client";
 
+import Image from 'next/image';
 import { useAtom } from 'jotai';
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -198,7 +199,7 @@ export function CanvasToolbar({
         </button>
 
         <div className="mx-2 flex min-w-0 flex-1 flex-wrap items-center gap-2">
-          <img src="/sca-logo.png" alt="SCA Eagles" className="h-7 w-7 object-contain" />
+          <Image src="/sca-logo.png" alt="SCA Eagles" width={28} height={28} className="h-7 w-7 object-contain" />
           {editingName ? (
             <input
               autoFocus

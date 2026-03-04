@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useMemo, useState } from 'react';
+import { use, useCallback, useEffect, useMemo, useState } from 'react';
 import { useAtom } from 'jotai';
 import { useRouter } from 'next/navigation';
 import { v4 as uuid } from 'uuid';
@@ -32,6 +32,7 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   const [tags, setTags] = useState<string[]>(['general']);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [loadError, setLoadError] = useState('');
   const router = useRouter();
 
   const applyCanvasChange = (updater: (prev: Map<string, CanvasElement>) => Map<string, CanvasElement>) => {
@@ -41,30 +42,37 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   };
 
   useEffect(() => {
-    fetch(`/api/plays/${id}`)
-      .then((r) => r.json())
-      .then((d) => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        setLoadError('');
+        const response = await fetch(`/api/plays/${id}`);
+        if (!response.ok) throw new Error('Failed to load play');
+        const payload = await response.json();
+        if (cancelled) return;
+
         const map = new Map<string, CanvasElement>();
-        (d.data?.canvasData ?? []).forEach((e: CanvasElement) => map.set(e.id, e));
+        (payload.data?.canvasData ?? []).forEach((e: CanvasElement) => map.set(e.id, e));
         setElements(map);
         setSelected(new Set());
         setUndo([]);
         setRedo([]);
-        setName(d.data?.name ?? 'Play');
-        setTags(Array.isArray(d.data?.tags) && d.data.tags.length ? d.data.tags : ['general']);
-      });
+        setName(payload.data?.name ?? 'Play');
+        setTags(Array.isArray(payload.data?.tags) && payload.data.tags.length ? payload.data.tags : ['general']);
+      } catch (error) {
+        console.error('Failed to load play', error);
+        if (!cancelled) setLoadError('Failed to load play.');
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id, setElements, setSelected, setUndo, setRedo]);
 
-  useEffect(() => {
-    const onUndoEvent = () => handleUndo();
-    const onRedoEvent = () => handleRedo();
-    window.addEventListener('canvas-undo', onUndoEvent);
-    window.addEventListener('canvas-redo', onRedoEvent);
-    return () => {
-      window.removeEventListener('canvas-undo', onUndoEvent);
-      window.removeEventListener('canvas-redo', onRedoEvent);
-    };
-  });
 
   const offensePresetNames = useMemo(() => offensePresets.map((p) => p.name), []);
   const defensePresetNames = useMemo(() => defensePresets.map((p) => p.name), []);
@@ -72,31 +80,52 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   const save = async (canvasDataOverride?: CanvasElement[]) => {
     const svg = document.querySelector('svg');
     const thumbnailSvg = svg ? new XMLSerializer().serializeToString(svg) : '';
-    await fetch(`/api/plays/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, tags, canvasData: canvasDataOverride ?? [...elements.values()], thumbnailSvg })
-    });
+
+    try {
+      const response = await fetch(`/api/plays/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, tags, canvasData: canvasDataOverride ?? [...elements.values()], thumbnailSvg })
+      });
+      if (!response.ok) throw new Error('Save failed');
+    } catch (error) {
+      console.error('Save failed', error);
+      window.alert('Failed to save play. Please try again.');
+    }
   };
 
   const renamePlay = async (nextName: string) => {
     setName(nextName);
-    await fetch(`/api/plays/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: nextName })
-    });
+
+    try {
+      const response = await fetch(`/api/plays/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nextName })
+      });
+      if (!response.ok) throw new Error('Rename failed');
+    } catch (error) {
+      console.error('Rename failed', error);
+      window.alert('Failed to rename play.');
+    }
   };
 
   const toggleTag = async (tag: string) => {
     const next = tags.includes(tag) ? tags.filter((t) => t !== tag) : [...tags, tag];
     const normalized = next.length ? next : ['general'];
     setTags(normalized);
-    await fetch(`/api/plays/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tags: normalized })
-    });
+
+    try {
+      const response = await fetch(`/api/plays/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: normalized })
+      });
+      if (!response.ok) throw new Error('Toggle tag failed');
+    } catch (error) {
+      console.error('Tag update failed', error);
+      window.alert('Failed to update tags.');
+    }
   };
 
   const exportPng = async () => {
@@ -151,8 +180,17 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   };
 
   const removePlay = async () => {
-    await fetch(`/api/plays/${id}`, { method: 'DELETE' });
-    router.push('/plays');
+    const confirmed = window.confirm('Delete this play? This cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(`/api/plays/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Delete failed');
+      router.push('/plays');
+    } catch (error) {
+      console.error('Delete failed', error);
+      window.alert('Failed to delete play. Please try again.');
+    }
   };
 
   const insertPlayer = ({ label, side }: { label: string; side: 'offense' | 'defense' }) => {
@@ -196,23 +234,34 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
     setSelected(new Set());
   };
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     if (undoStack.length === 0) return;
     const prev = undoStack[undoStack.length - 1].map(cloneElement);
     setUndo((stack) => stack.slice(0, -1));
     setRedo((stack) => [...stack, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setElements(new Map(prev.map((el) => [el.id, el])));
     setSelected(new Set());
-  };
+  }, [elements, setElements, setRedo, setSelected, setUndo, undoStack]);
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     if (redoStack.length === 0) return;
     const next = redoStack[redoStack.length - 1].map(cloneElement);
     setRedo((stack) => stack.slice(0, -1));
     setUndo((stack) => [...stack, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setElements(new Map(next.map((el) => [el.id, el])));
     setSelected(new Set());
-  };
+  }, [elements, redoStack, setElements, setRedo, setSelected, setUndo]);
+
+  useEffect(() => {
+    const onUndoEvent = () => handleUndo();
+    const onRedoEvent = () => handleRedo();
+    window.addEventListener('canvas-undo', onUndoEvent);
+    window.addEventListener('canvas-redo', onRedoEvent);
+    return () => {
+      window.removeEventListener('canvas-undo', onUndoEvent);
+      window.removeEventListener('canvas-redo', onRedoEvent);
+    };
+  }, [handleRedo, handleUndo]);
 
   const deleteSelected = () => {
     if (selected.size === 0) return;
@@ -258,6 +307,8 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
           tagPickerOpen={tagPickerOpen}
           tagOptions={TAG_OPTIONS}
         />
+
+        {loadError ? <p className="px-3 py-1 text-sm font-semibold text-red-300">{loadError}</p> : null}
 
         <div className="w-full min-h-0" style={{ height: 'calc(100vh - 104px)' }}>
           <FieldSVG />

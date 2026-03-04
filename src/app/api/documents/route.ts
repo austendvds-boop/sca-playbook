@@ -1,7 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 import { documents } from '@/db/schema';
 import { getDb } from '@/db';
-import { defaultPlayCardLayout, normalizePlayCardLayout } from '@/lib/installSheet';
+import { normalizePlayCardLayout } from '@/lib/installSheet';
 import { makeDefaultDocLayout } from '@/lib/store';
 import { desc } from 'drizzle-orm';
 

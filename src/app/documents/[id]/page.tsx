@@ -1,10 +1,12 @@
 "use client";
+
 import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { DocumentRec, Play, ReferenceLayout } from '@/lib/store';
 import { PlayCardTemplate } from '@/components/templates/PlayCardTemplate';
 import { ReferenceSheetTemplate } from '@/components/templates/ReferenceSheetTemplate';
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
+import { SafeSvgPreview } from '@/components/shared/SafeSvgPreview';
 import { defaultPlayCardLayout, normalizePlayCardLayout } from '@/lib/installSheet';
 
 export default function DocEdit({ params }: { params: Promise<{ id: string }> }) {
@@ -13,42 +15,64 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
   const [plays, setPlays] = useState<Play[]>([]);
   const [pickerIndex, setPickerIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
-    fetch(`/api/documents/${id}`)
-      .then((r) => r.json())
-      .then((d) => {
-        const fetched = d?.data as DocumentRec | null;
+    let cancelled = false;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setSaveError('');
+
+        const [docRes, playsRes] = await Promise.all([fetch(`/api/documents/${id}`), fetch('/api/plays')]);
+        if (!docRes.ok || !playsRes.ok) throw new Error('Failed to load document data');
+
+        const [docPayload, playsPayload] = await Promise.all([docRes.json(), playsRes.json()]);
+        if (cancelled) return;
+
+        const fetched = (docPayload?.data ?? null) as DocumentRec | null;
         if (!fetched) {
           setDoc(null);
+          setPlays(Array.isArray(playsPayload?.data) ? playsPayload.data : []);
           setLoading(false);
           return;
         }
 
-        if (fetched.docType === 'play_card') {
-          setDoc({ ...fetched, layoutData: normalizePlayCardLayout(fetched.layoutData) });
-          setLoading(false);
-          return;
+        setDoc(fetched.docType === 'play_card' ? { ...fetched, layoutData: normalizePlayCardLayout(fetched.layoutData) } : fetched);
+        setPlays(Array.isArray(playsPayload?.data) ? playsPayload.data : []);
+      } catch (error) {
+        console.error('Failed to load document editor data', error);
+        if (!cancelled) {
+          setDoc(null);
+          setPlays([]);
+          setSaveError('Unable to load this install sheet right now.');
         }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
 
-        setDoc(fetched);
-        setLoading(false);
-      });
+    void loadData();
 
-    fetch('/api/plays')
-      .then((r) => r.json())
-      .then((d) => setPlays(d.data || []));
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
     if (!doc) return;
+
     const t = setTimeout(() => {
       fetch(`/api/documents/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(doc)
+      }).catch((error) => {
+        console.error('Autosave failed', error);
       });
     }, 2000);
+
     return () => clearTimeout(t);
   }, [doc, id]);
 
@@ -56,13 +80,33 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
 
   const selectPlayForSlot = (playId: string) => {
     if (!doc || doc.docType !== 'play_card' || pickerIndex === null) return;
+
     const layout = normalizePlayCardLayout(doc.layoutData);
     const diagrams = [...layout.diagrams];
     const current = diagrams[pickerIndex];
     if (!current) return;
+
     diagrams[pickerIndex] = { ...current, playId };
     setDoc({ ...doc, layoutData: { ...layout, diagrams } });
     setPickerIndex(null);
+  };
+
+  const saveNow = async () => {
+    if (!doc) return;
+
+    try {
+      setSaveError('');
+      const response = await fetch(`/api/documents/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(doc)
+      });
+
+      if (!response.ok) throw new Error('Save failed');
+    } catch (error) {
+      console.error('Manual save failed', error);
+      setSaveError('Save failed. Please try again.');
+    }
   };
 
   if (loading) {
@@ -80,22 +124,15 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
           <Link href='/documents' className='rounded border border-[#003087] px-3 py-2 text-sm font-black uppercase text-[#003087]'>
             &lt; Install Sheets
           </Link>
-          <button
-            className='rounded bg-[#003087] px-3 py-2 font-black uppercase text-white'
-            onClick={() =>
-              fetch(`/api/documents/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(doc)
-              })
-            }
-          >
+          <button type='button' className='rounded bg-[#003087] px-3 py-2 font-black uppercase text-white' onClick={() => void saveNow()}>
             Save
           </button>
-          <button className='rounded border-2 border-[#003087] px-3 py-2 font-black uppercase text-[#003087]' onClick={() => window.open(`/documents/${id}/print`, '_blank')}>
+          <button type='button' className='rounded border-2 border-[#003087] px-3 py-2 font-black uppercase text-[#003087]' onClick={() => window.open(`/documents/${id}/print`, '_blank')}>
             Print
           </button>
         </div>
+
+        {saveError ? <p className='no-print text-sm font-semibold text-red-700'>{saveError}</p> : null}
 
         <div className='min-h-0 flex-1 overflow-auto'>
           {doc.docType === 'play_card' ? (
@@ -116,7 +153,7 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
           <div className='mx-auto flex h-full w-full max-w-6xl flex-col rounded border-2 border-[#003087] bg-white p-4'>
             <div className='mb-4 flex items-center justify-between'>
               <h2 className='text-2xl font-black uppercase text-[#003087]'>Select Play</h2>
-              <button type='button' onClick={() => setPickerIndex(null)} className='h-11 w-11 rounded border-2 border-[#003087] text-2xl font-black text-[#003087]'>
+              <button type='button' onClick={() => setPickerIndex(null)} className='h-11 w-11 rounded border-2 border-[#003087] text-2xl font-black text-[#003087]' aria-label='Close play picker'>
                 ×
               </button>
             </div>
@@ -137,7 +174,7 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
                       {Array.isArray(p.canvasData) && p.canvasData.length > 0 ? (
                         <PlaySVGRenderer elements={p.canvasData} className='h-full w-full' />
                       ) : p.thumbnailSvg?.trim().startsWith('<svg') ? (
-                        <div className='h-full w-full' dangerouslySetInnerHTML={{ __html: p.thumbnailSvg }} />
+                        <SafeSvgPreview svg={p.thumbnailSvg} alt={`${p.name} thumbnail`} className='h-full w-full' />
                       ) : (
                         <div className='flex h-full items-center justify-center text-xs font-bold uppercase text-[#003087]/60'>No Thumbnail</div>
                       )}
@@ -152,5 +189,3 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
     </main>
   );
 }
-
-

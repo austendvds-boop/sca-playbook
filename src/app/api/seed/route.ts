@@ -1,19 +1,19 @@
 import { NextResponse } from 'next/server';
-import { store } from '@/lib/store';
+import { createPlay, listPlays } from '@/lib/playPersistence';
 
 export async function POST() {
   try {
-    if (store.plays.length > 0) {
+    const existing = await listPlays();
+    if (existing.length > 0) {
       return NextResponse.json({ data: 'already' });
     }
 
-    store.plays.push({
-      id: crypto.randomUUID(),
+    await createPlay({
       name: 'Trips Right Mesh',
       tags: ['3rd_down'],
       situation: 'general',
       canvasData: [],
-      updatedAt: new Date().toISOString()
+      thumbnailSvg: ''
     });
 
     return NextResponse.json({ data: 'seeded' });

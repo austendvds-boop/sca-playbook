@@ -1,4 +1,4 @@
-﻿import { defaultPlayCardLayout } from '@/lib/installSheet';
+import { defaultPlayCardLayout } from '@/lib/installSheet';
 
 export type Point = { x: number; y: number };
 
@@ -119,58 +119,4 @@ const defaultRefSheet = (): ReferenceLayout => ({
   ]
 });
 
-const samplePlay = (id: string, name: string, offset = 0): Play => ({
-  id,
-  name,
-  tags: ['general'],
-  situation: 'general',
-  canvasData: [
-    { id: `${id}-lt`, type: 'player', x: 280 + offset, y: 320, position: 'LT', side: 'offense' },
-    { id: `${id}-lg`, type: 'player', x: 340 + offset, y: 320, position: 'LG', side: 'offense' },
-    { id: `${id}-c`, type: 'player', x: 400 + offset, y: 320, position: 'C', side: 'offense' },
-    { id: `${id}-rg`, type: 'player', x: 460 + offset, y: 320, position: 'RG', side: 'offense' },
-    { id: `${id}-rt`, type: 'player', x: 520 + offset, y: 320, position: 'RT', side: 'offense' },
-    { id: `${id}-qb`, type: 'player', x: 400 + offset, y: 355, position: 'QB', side: 'offense' },
-    { id: `${id}-x`, type: 'player', x: 180 + offset, y: 320, position: 'X', side: 'offense' },
-    { id: `${id}-r1`, type: 'route', points: [{ x: 180 + offset, y: 320 }, { x: 180 + offset, y: 130 }], color: '#111827', lineStyle: 'route' }
-  ],
-  updatedAt: new Date().toISOString()
-});
-
-const g = globalThis as unknown as { __scaStore?: { plays: Play[]; folders: Folder[]; docs: DocumentRec[] } };
-if (!g.__scaStore) {
-  const p1 = samplePlay('p1', 'Trips Right Slant');
-  const p2 = samplePlay('p2', 'Inside Zone', 40);
-  const p3 = samplePlay('p3', 'Cover 3 Buzz', -40);
-  g.__scaStore = {
-    folders: [
-      { id: 'f1', name: 'Run Game' },
-      { id: 'f2', name: 'Pass Game' },
-      { id: 'f3', name: 'Defense' }
-    ],
-    plays: [p1, p2, p3],
-    docs: [
-      {
-        id: 'd1',
-        name: 'Sample Install Sheet',
-        docType: 'play_card',
-        layoutData: { ...defaultPlayCard(), diagrams: [{ key: 'diagram_1', playId: p1.id, labelTop: '', labelBottom: '' }] },
-        updatedAt: new Date().toISOString()
-      }
-    ]
-  };
-}
-
-export const store = g.__scaStore;
 export const makeDefaultDocLayout = (docType: 'play_card' | 'reference_sheet') => (docType === 'reference_sheet' ? defaultRefSheet() : defaultPlayCard());
-
-
-
-
-
-
-
-
-
-
-

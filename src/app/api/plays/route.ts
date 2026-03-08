@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { type CanvasElement } from '@/lib/store';
-import { createPlay, getSeedPlays, listPlays } from '@/lib/playPersistence';
+import { createPlay, listPlays } from '@/lib/playPersistence';
 
 type CreatePlayBody = Partial<{
   name: string;
@@ -32,10 +32,9 @@ export async function GET(req: Request) {
     const tag = u.searchParams.get('tag') ?? '';
     const folderId = u.searchParams.get('folderId') ?? '';
 
-    const dbPlays = await listPlays();
-    const plays = [...dbPlays, ...getSeedPlays()].filter(
-      (p) => (!search || p.name.toLowerCase().includes(search)) && (!tag || p.tags.includes(tag)) && (!folderId || p.folderId === folderId)
-    );
+    const plays = (await listPlays())
+      .filter((p) => (!search || p.name.toLowerCase().includes(search)) && (!tag || p.tags.includes(tag)) && (!folderId || p.folderId === folderId))
+      .map(({ thumbnailSvg, ...playWithoutThumbnail }) => playWithoutThumbnail);
 
     return NextResponse.json({ data: plays, count: plays.length });
   } catch (error) {

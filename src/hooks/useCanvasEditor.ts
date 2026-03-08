@@ -35,11 +35,6 @@ const cloneElement = (el: CanvasElement): CanvasElement => {
 
 const snapshotFromMap = (map: Map<string, CanvasElement>) => [...map.values()].map(cloneElement);
 
-function serializeCanvasSvg(): string {
-  if (typeof document === 'undefined') return '';
-  const svg = document.querySelector('svg');
-  return svg ? new XMLSerializer().serializeToString(svg) : '';
-}
 
 export function useCanvasEditor({ playId, initialCanvasData, onSave }: UseCanvasEditorConfig) {
   const [elements, setElements] = useAtom(elementsAtom);
@@ -79,7 +74,7 @@ export function useCanvasEditor({ playId, initialCanvasData, onSave }: UseCanvas
       setSaveStatus('saving');
 
       try {
-        await onSave({ playId, canvasData, thumbnailSvg: serializeCanvasSvg() });
+        await onSave({ playId, canvasData, thumbnailSvg: '' });
         setSaveStatus('saved');
 
         savedTimerRef.current = setTimeout(() => {

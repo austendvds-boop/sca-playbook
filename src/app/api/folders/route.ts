@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createFolder, getSeedFolders, listFolders } from '@/lib/playPersistence';
+import { createFolder, listFolders } from '@/lib/playPersistence';
 
 function parseCreateFolderBody(input: unknown): { name?: string; parentId?: string } {
   if (!input || typeof input !== 'object') return {};
@@ -12,7 +12,7 @@ function parseCreateFolderBody(input: unknown): { name?: string; parentId?: stri
 
 export async function GET() {
   try {
-    const data = [...getSeedFolders(), ...(await listFolders())];
+    const data = await listFolders();
     return NextResponse.json({ data, count: data.length });
   } catch (error) {
     console.error('GET /api/folders failed', error);

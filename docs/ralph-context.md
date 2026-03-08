@@ -1,6 +1,6 @@
 # Ralph Context
 
-## Batch CT-B1 — Canvas Hook Extraction + Save UX (2026-03-08)
+## Batch CT-B1 - Canvas Hook Extraction + Save UX (2026-03-08)
 
 ### Files Created
 - `src/hooks/useCanvasEditor.ts`
@@ -33,7 +33,7 @@
 
 ---
 
-## Batch CT-B2 — Data Layer Consolidation + Thumbnail Payload Reduction (2026-03-08)
+## Batch CT-B2 - Data Layer Consolidation + Thumbnail Payload Reduction (2026-03-08)
 
 ### Files Modified
 - `src/db/schema.ts`
@@ -68,3 +68,33 @@
 - `thumbnailSvg` still exists on the schema/type and can be returned by single-play endpoints; list endpoint intentionally omits it.
 - Folder delete still nulls `plays.folder_id` and bumps `updated_at` for affected plays.
 - `drizzle-kit` moved to `devDependencies`; lockfile updated accordingly.
+
+---
+
+## Batch CT-B3 - Reference Sheet Print Support + Loading Skeleton States (2026-03-08)
+
+### Files Modified
+- `src/app/documents/[id]/print/page.tsx`
+- `src/app/plays/page.tsx`
+- `src/app/documents/page.tsx`
+- `src/app/documents/[id]/page.tsx`
+- `src/app/page.tsx`
+- `docs/ralph-context.md`
+
+### Changes implemented
+- Added `reference_sheet` handling in the document print page with a dedicated print-friendly layout for combinations, descriptions, and attached diagrams.
+- Kept the existing `play_card` print branch intact while changing the loading copy to `Preparing document...`.
+- Hid the print-page loading indicator during print with `@media print`.
+- Replaced bare loading states with Tailwind skeletons in:
+  - `src/app/plays/page.tsx`
+  - `src/app/documents/page.tsx`
+  - `src/app/documents/[id]/page.tsx`
+- Updated the home page count fetch flow so successful requests show real counts, failed requests show `-`, and the stats row uses a subtle pulse while loading.
+
+### Verification
+- `npm run build` reached Next.js compile and TypeScript, then failed in this sandbox with `spawn EPERM`.
+- `npx tsc --noEmit` passed.
+
+### Gotchas / Notes
+- The documents list still only exposes the `New Install Sheet` button in its header; reference sheets are supported by the document model and print route but not added to that list-page action in this batch.
+- The `next build` failure appears environment-level rather than code-level because compilation completed before the blocked spawn.

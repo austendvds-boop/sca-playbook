@@ -39,12 +39,41 @@ function ModeCard({ href, title, description, kind, red }: { href: string; title
 }
 
 export default function HomePage() {
-  const [playCount, setPlayCount] = useState(0);
-  const [docCount, setDocCount] = useState(0);
+  const [playCount, setPlayCount] = useState<number | null>(null);
+  const [docCount, setDocCount] = useState<number | null>(null);
+  const [countsLoading, setCountsLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/plays').then((r) => r.json()).then((d) => setPlayCount((d.data || []).length)).catch(() => undefined);
-    fetch('/api/documents').then((r) => r.json()).then((d) => setDocCount((d.data || []).length)).catch(() => undefined);
+    let cancelled = false;
+
+    const loadCounts = async () => {
+      setCountsLoading(true);
+
+      const [playsResult, docsResult] = await Promise.allSettled([
+        fetch('/api/plays').then(async (response) => {
+          if (!response.ok) throw new Error('Failed to load plays');
+          const payload = await response.json();
+          return Array.isArray(payload?.data) ? payload.data.length : 0;
+        }),
+        fetch('/api/documents').then(async (response) => {
+          if (!response.ok) throw new Error('Failed to load documents');
+          const payload = await response.json();
+          return Array.isArray(payload?.data) ? payload.data.length : 0;
+        })
+      ]);
+
+      if (cancelled) return;
+
+      setPlayCount(playsResult.status === 'fulfilled' ? playsResult.value : null);
+      setDocCount(docsResult.status === 'fulfilled' ? docsResult.value : null);
+      setCountsLoading(false);
+    };
+
+    void loadCounts();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -64,9 +93,9 @@ export default function HomePage() {
         <div className="flex w-full max-w-md flex-col gap-4">
           <ModeCard href="/plays/new" title="Whiteboard" description="Draw and diagram plays" kind="whiteboard" red />
           <ModeCard href="/documents" title="Install Sheets" description="Build teaching documents" kind="documents" />
-          <div className="mt-6 flex gap-6 text-sm text-white/60">
-            <span>{playCount} plays</span>
-            <span>{docCount} install sheets</span>
+          <div className={`mt-6 flex gap-6 text-sm text-white/60 ${countsLoading ? 'animate-pulse' : ''}`}>
+            <span>{playCount ?? '—'} plays</span>
+            <span>{docCount ?? '—'} install sheets</span>
           </div>
         </div>
 

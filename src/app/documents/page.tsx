@@ -1,7 +1,7 @@
 ﻿"use client";
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defaultPlayCardLayout } from '@/lib/installSheet';
 
 type Doc = {
@@ -19,16 +19,34 @@ type Play = { id: string; name: string };
 export default function DocumentsPage() {
   const [docs, setDocs] = useState<Doc[]>([]);
   const [plays, setPlays] = useState<Play[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const router = useRouter();
 
-  const load = () => {
-    fetch('/api/documents').then((r) => r.json()).then((d) => setDocs(d.data || []));
-    fetch('/api/plays').then((r) => r.json()).then((d) => setPlays(d.data || []));
-  };
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const [docsRes, playsRes] = await Promise.all([fetch('/api/documents'), fetch('/api/plays')]);
+      if (!docsRes.ok || !playsRes.ok) throw new Error('Failed to load documents');
+
+      const [docsPayload, playsPayload] = await Promise.all([docsRes.json(), playsRes.json()]);
+      setDocs(Array.isArray(docsPayload?.data) ? docsPayload.data : []);
+      setPlays(Array.isArray(playsPayload?.data) ? playsPayload.data : []);
+    } catch (loadError) {
+      console.error('Failed to load documents page', loadError);
+      setDocs([]);
+      setPlays([]);
+      setError('Unable to load install sheets right now.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    load();
-  }, []);
+    void load();
+  }, [load]);
 
   const playMap = useMemo(() => new Map(plays.map((p) => [p.id, p.name])), [plays]);
 
@@ -78,7 +96,21 @@ export default function DocumentsPage() {
       </div>
 
       <div className='min-h-0 flex-1 overflow-auto pb-2'>
-        {docs.length === 0 ? (
+        {error ? <p className='mb-3 text-sm font-semibold text-red-700'>{error}</p> : null}
+
+        {loading ? (
+          <div className='grid gap-3 pr-1'>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className='rounded border-2 border-gray-200 bg-white p-3'>
+                <div className='h-6 w-48 animate-pulse rounded bg-gray-200' />
+                <div className='mt-2 h-4 w-32 animate-pulse rounded bg-gray-200' />
+                <div className='mt-4 flex justify-end'>
+                  <div className='h-8 w-20 animate-pulse rounded bg-gray-200' />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : !error && docs.length === 0 ? (
           <div className='flex flex-col items-center justify-center gap-4 px-6 text-center py-8'>
             <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
               <ellipse cx="32" cy="32" rx="20" ry="12" stroke="#003087" strokeWidth="3" />

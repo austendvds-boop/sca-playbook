@@ -17,11 +17,13 @@ export default function PlaysPage() {
   const [tag, setTag] = useState('');
   const [folderId, setFolderId] = useState('');
   const [folderMenuOpen, setFolderMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const folderMenuRef = useRef<HTMLDivElement | null>(null);
 
   const load = useCallback(async () => {
     try {
+      setLoading(true);
       setError('');
       const [playsRes, foldersRes] = await Promise.all([fetch('/api/plays'), fetch('/api/folders')]);
       if (!playsRes.ok || !foldersRes.ok) {
@@ -34,6 +36,8 @@ export default function PlaysPage() {
     } catch (loadError) {
       console.error('Failed to load play library', loadError);
       setError('Unable to load play library right now.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -151,13 +155,32 @@ export default function PlaysPage() {
 
       <div className="min-h-0 flex-1 overflow-auto pb-2">
         <div className="grid gap-4 pr-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredPlays.length === 0 ? (
+          {loading
+            ? Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className="overflow-hidden rounded border bg-white">
+                  <div className="h-44 animate-pulse border-b bg-gray-200" />
+                  <div className="space-y-2 p-3">
+                    <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
+                    <div className="flex flex-wrap gap-1">
+                      <div className="h-5 w-16 animate-pulse rounded-full bg-gray-200" />
+                      <div className="h-5 w-20 animate-pulse rounded-full bg-gray-200" />
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <div className="h-7 w-12 animate-pulse rounded bg-gray-200" />
+                      <div className="h-7 w-16 animate-pulse rounded bg-gray-200" />
+                      <div className="h-7 w-14 animate-pulse rounded bg-gray-200" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            : null}
+          {!loading && !error && filteredPlays.length === 0 ? (
             <div className="col-span-3 py-20 text-center text-gray-400">
               <p className="text-lg font-semibold">No plays found</p>
               <p className="mt-1 text-sm">Try adjusting your search or filters</p>
             </div>
           ) : null}
-          {filteredPlays.map((p) => (
+          {!loading && filteredPlays.map((p) => (
             <div key={p.id} className="overflow-hidden rounded border bg-white">
               <div className="h-44 border-b">
                 {Array.isArray(p.canvasData) && p.canvasData.length > 0 ? (

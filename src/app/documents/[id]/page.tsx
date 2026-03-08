@@ -110,7 +110,41 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
   };
 
   if (loading) {
-    return <main className='flex h-[100dvh] items-center justify-center overflow-hidden p-6 font-black uppercase text-[#003087]'>Loading...</main>;
+    return (
+      <main className='h-[100dvh] overflow-hidden p-3 md:p-4'>
+        <div className='mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden'>
+          <div className='flex shrink-0 items-center gap-2'>
+            <div className='h-10 w-36 animate-pulse rounded border border-gray-200 bg-gray-200' />
+            <div className='h-10 w-20 animate-pulse rounded bg-gray-200' />
+            <div className='h-10 w-20 animate-pulse rounded border border-gray-200 bg-gray-200' />
+          </div>
+          <div className='flex min-h-0 flex-1 flex-col gap-4 overflow-auto rounded border-2 border-gray-200 bg-white p-4 md:p-6'>
+            <div className='h-10 w-56 animate-pulse rounded bg-gray-200' />
+            <div className='grid gap-3 md:grid-cols-3'>
+              <div className='h-12 animate-pulse rounded bg-gray-200' />
+              <div className='h-12 animate-pulse rounded bg-gray-200' />
+              <div className='h-12 animate-pulse rounded bg-gray-200' />
+            </div>
+            <div className='grid gap-4 lg:grid-cols-2'>
+              <div className='space-y-3'>
+                <div className='h-6 w-28 animate-pulse rounded bg-gray-200' />
+                <div className='h-64 animate-pulse rounded border border-gray-200 bg-gray-200' />
+              </div>
+              <div className='space-y-3'>
+                <div className='h-6 w-28 animate-pulse rounded bg-gray-200' />
+                <div className='h-64 animate-pulse rounded border border-gray-200 bg-gray-200' />
+              </div>
+            </div>
+            <div className='space-y-2'>
+              <div className='h-6 w-32 animate-pulse rounded bg-gray-200' />
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className='h-10 animate-pulse rounded bg-gray-200' />
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   if (!doc) {

@@ -48,7 +48,7 @@ function snapshotFromMap(map: Map<string, CanvasElement>) {
   return [...map.values()].map(cloneElement);
 }
 
-export function FieldSVG() {
+export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
   const [tool, setTool] = useAtom(activeToolAtom);
   const [elements, setElements] = useAtom(elementsAtom);
   const [selected, setSelected] = useAtom(selectedIdsAtom);
@@ -119,6 +119,12 @@ export function FieldSVG() {
         return;
       }
 
+      if (mod && key === 's') {
+        evt.preventDefault();
+        onSave?.();
+        return;
+      }
+
       if (key === 'r') setTool('route');
       if (key === 'm') setTool('dashed_route');
       if (key === 'b') setTool('tbar');
@@ -136,7 +142,7 @@ export function FieldSVG() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [setTool, elements, selected, setSelected]);
+  }, [setTool, elements, selected, setSelected, onSave]);
 
   const onPointerMove = (evt: React.PointerEvent<SVGSVGElement>) => {
     const p = svgPoint(evt);

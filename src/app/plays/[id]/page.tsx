@@ -1,45 +1,62 @@
 "use client";
-import { use, useCallback, useEffect, useMemo, useState } from 'react';
-import { useAtom } from 'jotai';
+
+import { use, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { v4 as uuid } from 'uuid';
 import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
 import { FieldSVG } from '@/components/canvas/FieldSVG';
-import { elementsAtom, selectedIdsAtom, undoStackAtom, redoStackAtom } from '@/atoms/canvas';
-import { offensePresets, defensePresets } from '@/lib/presets';
+import { SaveStatus, useCanvasEditor } from '@/hooks/useCanvasEditor';
 import { CanvasElement } from '@/lib/store';
 
-const FIELD_CENTER = { x: 500, y: 320 };
 const TAG_OPTIONS = ['red_zone', 'goal_line', '3rd_down', '2_minute', 'general'];
-const MAX_HISTORY = 50;
 
-const cloneElement = (el: CanvasElement): CanvasElement => {
-  if (el.type === 'player') return { ...el };
-  if (el.type === 'text') return { ...el };
-  if (el.type === 'zone') return { ...el };
-  return { ...el, points: el.points.map((p) => ({ ...p })) };
-};
+function SaveStatusIndicator({ status }: { status: SaveStatus }) {
+  if (status === 'idle') return null;
 
-const snapshotFromMap = (map: Map<string, CanvasElement>) => [...map.values()].map(cloneElement);
+  if (status === 'saving') return <span className="text-xs text-slate-300">Saving...</span>;
+  if (status === 'saved') return <span className="text-xs text-emerald-300">✓ Saved</span>;
+  return <span className="text-xs text-red-300">Save failed</span>;
+}
 
 export default function PlayEdit({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [elements, setElements] = useAtom(elementsAtom);
-  const [selected, setSelected] = useAtom(selectedIdsAtom);
-  const [undoStack, setUndo] = useAtom(undoStackAtom);
-  const [redoStack, setRedo] = useAtom(redoStackAtom);
   const [name, setName] = useState('Play');
   const [tags, setTags] = useState<string[]>(['general']);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [initialCanvasData, setInitialCanvasData] = useState<CanvasElement[] | undefined>(undefined);
   const router = useRouter();
 
-  const applyCanvasChange = (updater: (prev: Map<string, CanvasElement>) => Map<string, CanvasElement>) => {
-    setUndo((prev) => [...prev, snapshotFromMap(elements)].slice(-MAX_HISTORY));
-    setRedo([]);
-    setElements((prev) => updater(prev));
-  };
+  const savePlay = useCallback(
+    async ({ canvasData, thumbnailSvg }: { canvasData: CanvasElement[]; thumbnailSvg: string }) => {
+      const response = await fetch(`/api/plays/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, tags, canvasData, thumbnailSvg })
+      });
+
+      if (!response.ok) throw new Error('Save failed');
+    },
+    [id, name, tags]
+  );
+
+  const {
+    elements,
+    saveStatus,
+    canUndo,
+    canRedo,
+    offensePresetNames,
+    defensePresetNames,
+    applyCanvasChange,
+    setSelected,
+    requestSaveNow,
+    insertPlayer,
+    insertOLGroup,
+    applyPreset,
+    handleUndo,
+    handleRedo,
+    deleteSelected
+  } = useCanvasEditor({ playId: id, initialCanvasData, onSave: savePlay });
 
   useEffect(() => {
     let cancelled = false;
@@ -49,20 +66,19 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
         setLoadError('');
         const response = await fetch(`/api/plays/${id}`);
         if (!response.ok) throw new Error('Failed to load play');
+
         const payload = await response.json();
         if (cancelled) return;
 
-        const map = new Map<string, CanvasElement>();
-        (payload.data?.canvasData ?? []).forEach((e: CanvasElement) => map.set(e.id, e));
-        setElements(map);
-        setSelected(new Set());
-        setUndo([]);
-        setRedo([]);
         setName(payload.data?.name ?? 'Play');
         setTags(Array.isArray(payload.data?.tags) && payload.data.tags.length ? payload.data.tags : ['general']);
+        setInitialCanvasData(Array.isArray(payload.data?.canvasData) ? payload.data.canvasData : []);
       } catch (error) {
         console.error('Failed to load play', error);
-        if (!cancelled) setLoadError('Failed to load play.');
+        if (!cancelled) {
+          setLoadError('Failed to load play.');
+          setInitialCanvasData([]);
+        }
       }
     };
 
@@ -71,28 +87,7 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
     return () => {
       cancelled = true;
     };
-  }, [id, setElements, setSelected, setUndo, setRedo]);
-
-
-  const offensePresetNames = useMemo(() => offensePresets.map((p) => p.name), []);
-  const defensePresetNames = useMemo(() => defensePresets.map((p) => p.name), []);
-
-  const save = async (canvasDataOverride?: CanvasElement[]) => {
-    const svg = document.querySelector('svg');
-    const thumbnailSvg = svg ? new XMLSerializer().serializeToString(svg) : '';
-
-    try {
-      const response = await fetch(`/api/plays/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, tags, canvasData: canvasDataOverride ?? [...elements.values()], thumbnailSvg })
-      });
-      if (!response.ok) throw new Error('Save failed');
-    } catch (error) {
-      console.error('Save failed', error);
-      window.alert('Failed to save play. Please try again.');
-    }
-  };
+  }, [id]);
 
   const renamePlay = async (nextName: string) => {
     setName(nextName);
@@ -131,10 +126,12 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   const exportPng = async () => {
     const svg = document.querySelector('svg');
     if (!svg) return;
+
     const raw = new XMLSerializer().serializeToString(svg);
     const svgBlob = new Blob([raw], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
     const img = new Image();
+
     img.onload = () => {
       const c = document.createElement('canvas');
       c.width = 1600;
@@ -155,6 +152,7 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
       }, 'image/png');
       URL.revokeObjectURL(url);
     };
+
     img.src = url;
   };
 
@@ -167,10 +165,14 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
       else next.set(e.id, { ...e, points: e.points.map((p) => ({ x: 1000 - p.x, y: p.y })) });
     });
 
-    setUndo((prev) => [...prev, snapshotFromMap(elements)].slice(-MAX_HISTORY));
-    setRedo([]);
-    setElements(next);
-    await save([...next.values()]);
+    applyCanvasChange(() => next);
+
+    try {
+      await requestSaveNow([...next.values()]);
+    } catch (error) {
+      console.error('Mirror save failed', error);
+      window.alert('Failed to save mirrored play.');
+    }
   };
 
   const clearCanvas = () => {
@@ -193,94 +195,14 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
     }
   };
 
-  const insertPlayer = ({ label, side }: { label: string; side: 'offense' | 'defense' }) => {
-    const player: CanvasElement = { id: uuid(), type: 'player', x: FIELD_CENTER.x, y: FIELD_CENTER.y, position: label, side };
-    applyCanvasChange((prev) => new Map(prev).set(player.id, player));
-    setSelected(new Set([player.id]));
-  };
-
-  const insertOLGroup = () => {
-    const group: CanvasElement[] = [
-      { id: uuid(), type: 'player', x: 420, y: 320, position: 'LT', side: 'offense' },
-      { id: uuid(), type: 'player', x: 460, y: 320, position: 'LG', side: 'offense' },
-      { id: uuid(), type: 'player', x: 500, y: 320, position: 'C', side: 'offense' },
-      { id: uuid(), type: 'player', x: 540, y: 320, position: 'RG', side: 'offense' },
-      { id: uuid(), type: 'player', x: 580, y: 320, position: 'RT', side: 'offense' }
-    ];
-    applyCanvasChange((prev) => {
-      const next = new Map(prev);
-      group.forEach((el) => next.set(el.id, el));
-      return next;
-    });
-    setSelected(new Set(group.map((el) => el.id)));
-  };
-
-  const applyPreset = (presetName: string, side: 'offense' | 'defense') => {
-    const source = side === 'offense' ? offensePresets : defensePresets;
-    const preset = source.find((p) => p.name === presetName);
-    if (!preset) return;
-
-    if (elements.size > 0) {
-      const confirmed = window.confirm(side === 'defense' ? `Start a new play with ${preset.name} defense?` : `Replace current play with ${presetName}?`);
-      if (!confirmed) return;
-    }
-
-    const next = new Map<string, CanvasElement>();
-    preset.elements.forEach((el) => {
-      const elId = uuid();
-      next.set(elId, el.type === 'player' && side === 'defense' ? { ...el, id: elId, side: 'defense' } : { ...el, id: elId });
-    });
-    applyCanvasChange(() => next);
-    setSelected(new Set());
-  };
-
-  const handleUndo = useCallback(() => {
-    if (undoStack.length === 0) return;
-    const prev = undoStack[undoStack.length - 1].map(cloneElement);
-    setUndo((stack) => stack.slice(0, -1));
-    setRedo((stack) => [...stack, snapshotFromMap(elements)].slice(-MAX_HISTORY));
-    setElements(new Map(prev.map((el) => [el.id, el])));
-    setSelected(new Set());
-  }, [elements, setElements, setRedo, setSelected, setUndo, undoStack]);
-
-  const handleRedo = useCallback(() => {
-    if (redoStack.length === 0) return;
-    const next = redoStack[redoStack.length - 1].map(cloneElement);
-    setRedo((stack) => stack.slice(0, -1));
-    setUndo((stack) => [...stack, snapshotFromMap(elements)].slice(-MAX_HISTORY));
-    setElements(new Map(next.map((el) => [el.id, el])));
-    setSelected(new Set());
-  }, [elements, redoStack, setElements, setRedo, setSelected, setUndo]);
-
-  useEffect(() => {
-    const onUndoEvent = () => handleUndo();
-    const onRedoEvent = () => handleRedo();
-    window.addEventListener('canvas-undo', onUndoEvent);
-    window.addEventListener('canvas-redo', onRedoEvent);
-    return () => {
-      window.removeEventListener('canvas-undo', onUndoEvent);
-      window.removeEventListener('canvas-redo', onRedoEvent);
-    };
-  }, [handleRedo, handleUndo]);
-
-  const deleteSelected = () => {
-    if (selected.size === 0) return;
-    applyCanvasChange((prev) => {
-      const next = new Map(prev);
-      selected.forEach((selId) => next.delete(selId));
-      return next;
-    });
-    setSelected(new Set());
-  };
-
   return (
     <main className="w-screen overflow-hidden bg-[#111124] text-white" style={{ height: '100dvh' }}>
-      <div className="flex w-screen flex-col overflow-hidden h-dvh">
+      <div className="flex h-dvh w-screen flex-col overflow-hidden">
         <CanvasToolbar
           name={name}
           onNameChange={(next) => void renamePlay(next)}
           onBack={() => router.push('/plays')}
-          onSave={() => void save()}
+          onSave={() => void requestSaveNow().catch(() => window.alert('Failed to save play. Please try again.'))}
           moreMenuOpen={moreMenuOpen}
           onToggleMoreMenu={() => setMoreMenuOpen((v) => !v)}
           moreMenu={(
@@ -299,8 +221,8 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
           onDeleteSelected={deleteSelected}
           onUndo={handleUndo}
           onRedo={handleRedo}
-          canUndo={undoStack.length > 0}
-          canRedo={redoStack.length > 0}
+          canUndo={canUndo}
+          canRedo={canRedo}
           tags={tags}
           onToggleTag={(t) => void toggleTag(t)}
           onToggleTagPicker={() => setTagPickerOpen((v) => !v)}
@@ -310,8 +232,12 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
 
         {loadError ? <p className="px-3 py-1 text-sm font-semibold text-red-300">{loadError}</p> : null}
 
-        <div className="w-full min-h-0" style={{ height: 'calc(100vh - 104px)' }}>
-          <FieldSVG />
+        <div className="flex items-center justify-end px-3 py-1">
+          <SaveStatusIndicator status={saveStatus} />
+        </div>
+
+        <div className="min-h-0 w-full" style={{ height: 'calc(100vh - 132px)' }}>
+          <FieldSVG onSave={() => void requestSaveNow().catch(() => window.alert('Failed to save play. Please try again.'))} />
         </div>
       </div>
     </main>

@@ -10,7 +10,8 @@ import {
   selectedIdsAtomFamily,
   Tool,
   undoStackAtomFamily,
-  viewportAtomFamily
+  viewportAtomFamily,
+  type Viewport
 } from '@/atoms/canvas';
 import { CanvasElement, LineElement, Point, ZoneElement } from '@/lib/store';
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
@@ -20,13 +21,25 @@ const FIELD_WIDTH = 1000;
 const FIELD_HEIGHT = 560;
 const MAX_HISTORY = 50;
 
-function pointFromClient(clientX: number, clientY: number, svg: SVGSVGElement): Point {
-  const r = svg.getBoundingClientRect();
-  return { x: ((clientX - r.left) / r.width) * FIELD_WIDTH, y: ((clientY - r.top) / r.height) * FIELD_HEIGHT };
+function pointFromClient(clientX: number, clientY: number, svg: SVGSVGElement, viewport: Viewport): Point {
+  const ctm = svg.getScreenCTM();
+  if (!ctm) {
+    // Fallback: old behavior (better than nothing)
+    const r = svg.getBoundingClientRect();
+    return { x: ((clientX - r.left) / r.width) * FIELD_WIDTH, y: ((clientY - r.top) / r.height) * FIELD_HEIGHT };
+  }
+  const inv = ctm.inverse();
+  const svgX = inv.a * clientX + inv.c * clientY + inv.e;
+  const svgY = inv.b * clientX + inv.d * clientY + inv.f;
+  // Reverse the viewport transform to get content coordinates
+  return {
+    x: (svgX - viewport.x) / viewport.zoom,
+    y: (svgY - viewport.y) / viewport.zoom
+  };
 }
 
-function svgPoint(evt: React.PointerEvent<SVGSVGElement>): Point {
-  return pointFromClient(evt.clientX, evt.clientY, evt.currentTarget);
+function svgPoint(evt: React.PointerEvent<SVGSVGElement>, viewport: Viewport): Point {
+  return pointFromClient(evt.clientX, evt.clientY, evt.currentTarget, viewport);
 }
 
 function isLineTool(tool: Tool): tool is 'route' | 'dashed_route' | 'tbar' | 'zone' {
@@ -175,7 +188,7 @@ export function FieldSVG({ onSave, playId, playTitle }: { onSave?: () => void; p
   }, [commit, elements, onSave, selected, setSelected, setTool, shortcutsOpen]);
 
   const onPointerMove = (evt: React.PointerEvent<SVGSVGElement>) => {
-    const p = svgPoint(evt);
+    const p = svgPoint(evt, viewport);
     if (dragRef.current) {
       setDraggingPlayer({ id: dragRef.current.id, x: p.x - dragRef.current.dx, y: p.y - dragRef.current.dy });
       return;
@@ -192,7 +205,7 @@ export function FieldSVG({ onSave, playId, playTitle }: { onSave?: () => void; p
   };
 
   const onPointerUp = (evt: React.PointerEvent<SVGSVGElement>) => {
-    const p = svgPoint(evt);
+    const p = svgPoint(evt, viewport);
     if (dragRef.current) {
       if (draggingPlayer) {
         const hit = elements.get(dragRef.current.id);
@@ -244,7 +257,7 @@ export function FieldSVG({ onSave, playId, playTitle }: { onSave?: () => void; p
             const svg = evt.currentTarget.ownerSVGElement;
             if (!svg) return;
             svg.setPointerCapture(evt.pointerId);
-            const pt = pointFromClient(evt.clientX, evt.clientY, svg);
+            const pt = pointFromClient(evt.clientX, evt.clientY, svg, viewport);
             dragRef.current = { id, dx: pt.x - x, dy: pt.y - y };
             setSelected(new Set([id]));
           }
@@ -259,7 +272,7 @@ export function FieldSVG({ onSave, playId, playTitle }: { onSave?: () => void; p
             setViewport((prev) => ({ ...prev, x: prev.x + 3, y: prev.y + 3 }));
           }
           if (isLineTool(tool)) {
-            startFreehand(evt, svgPoint(evt));
+            startFreehand(evt, svgPoint(evt, viewport));
             return;
           }
           if (tool === 'select') setSelected(new Set());

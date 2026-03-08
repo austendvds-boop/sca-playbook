@@ -77,10 +77,15 @@ export default function HomePage() {
   }, []);
 
   return (
-    <main
-      style={{ backgroundImage: "url('/sca-team-champs.jpg')" }}
-      className="relative h-screen overflow-hidden bg-cover bg-center text-white"
-    >
+    <main className="relative h-screen overflow-hidden text-white">
+      <Image
+        src="/sca-team-champs.jpg"
+        alt="SCA football team celebrating a championship"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
       <div className="absolute inset-0 bg-gradient-to-b from-[#003087]/88 to-black/80" />
 
       <div className="relative z-10 flex h-full flex-col items-center justify-between px-6 py-8 text-center">

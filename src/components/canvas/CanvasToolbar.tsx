@@ -4,17 +4,8 @@ import Image from 'next/image';
 import { useAtom } from 'jotai';
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  ArrowLeft,
-  Hexagon,
-  MousePointer2,
-  MoreVertical,
-  Save,
-  Trash2,
-  Undo2,
-  Redo2
-} from 'lucide-react';
-import { activeToolAtom, Tool } from '@/atoms/canvas';
+import { ArrowLeft, Hexagon, MousePointer2, MoreVertical, Save, Trash2, Undo2, Redo2 } from 'lucide-react';
+import { activeToolAtomFamily, DEFAULT_CANVAS_PLAY_ID, Tool } from '@/atoms/canvas';
 
 type DrawerTab = 'offense' | 'defense' | 'presets';
 
@@ -93,7 +84,7 @@ function tokenClasses(label: string, side: 'offense' | 'defense') {
   const isCenter = side === 'offense' && label.toUpperCase() === 'C';
   const isLinebacker = side === 'defense' && ['W', 'M', 'S', 'B', 'F'].includes(label.toUpperCase());
   const isBack = side === 'offense' && ['RB', 'FB'].includes(label.toUpperCase());
-  const bg = side === 'offense' ? (isBack ? 'bg-[#AA0000]' : 'bg-[#CC0000]') : isLinebacker ? 'bg-[#15803d]' : 'bg-[#003087]';
+  const bg = side === 'offense' ? (isBack ? 'bg-[#AA0000]' : 'bg-[#A40000]') : isLinebacker ? 'bg-[#15803d]' : 'bg-[#003087]';
   return `h-9 w-9 ${bg} text-white text-[11px] font-semibold ${isCenter ? 'rounded-md' : 'rounded-full'} inline-flex items-center justify-center`;
 }
 
@@ -110,6 +101,7 @@ function OLGroupIcon() {
 }
 
 export function CanvasToolbar({
+  playId,
   name,
   onNameChange,
   onBack,
@@ -133,6 +125,7 @@ export function CanvasToolbar({
   tagPickerOpen = false,
   tagOptions = []
 }: {
+  playId?: string;
   name: string;
   onNameChange: (next: string) => void;
   onBack: () => void;
@@ -156,7 +149,7 @@ export function CanvasToolbar({
   tagPickerOpen?: boolean;
   tagOptions?: string[];
 }) {
-  const [active, setActive] = useAtom(activeToolAtom);
+  const [active, setActive] = useAtom(activeToolAtomFamily(playId ?? DEFAULT_CANVAS_PLAY_ID));
   const [activeTab, setActiveTab] = useState<DrawerTab>('offense');
   const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState(name);
@@ -194,7 +187,11 @@ export function CanvasToolbar({
   return (
     <>
       <header className="no-print relative z-30 flex min-h-12 flex-shrink-0 items-center justify-between border-b border-white/10 bg-[#003087] px-3 py-1 text-white">
-        <button onClick={onBack} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="Back to plays">
+        <button
+          onClick={onBack}
+          className="rounded-md p-2 text-white/90 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          aria-label="Back to plays"
+        >
           <ArrowLeft className="h-4 w-4" />
         </button>
 
@@ -221,23 +218,37 @@ export function CanvasToolbar({
                   setEditingName(false);
                 }
               }}
-              className="w-full rounded-md border border-white/20 bg-white/10 px-2 py-1 text-sm text-white outline-none"
+              className="w-full rounded-md border border-white/20 bg-white/10 px-2 py-1 text-sm text-white outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Play name"
             />
           ) : (
-            <button onClick={() => setEditingName(true)} className="max-w-full truncate text-left text-sm font-semibold text-white">
+            <button
+              onClick={() => setEditingName(true)}
+              className="max-w-full truncate rounded px-1 text-left text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              aria-label="Edit play name"
+            >
               {name}
             </button>
           )}
 
           <div className="flex flex-wrap items-center gap-1">
             {tags.map((tag) => (
-              <button key={tag} onClick={() => onToggleTag?.(tag)} className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] text-white hover:bg-white/25">
+              <button
+                key={tag}
+                onClick={() => onToggleTag?.(tag)}
+                className="rounded-full bg-white/15 px-2 py-0.5 text-[11px] text-white hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                aria-label={`Remove tag ${tag}`}
+              >
                 {tag} ×
               </button>
             ))}
             {onToggleTagPicker ? (
               <div className="relative">
-                <button onClick={onToggleTagPicker} className="rounded-full border border-white/40 px-2 py-0.5 text-[11px] text-white">
+                <button
+                  onClick={onToggleTagPicker}
+                  className="rounded-full border border-white/40 px-2 py-0.5 text-[11px] text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                  aria-label="Toggle tag picker"
+                >
                   + tag
                 </button>
                 {tagPickerOpen ? (
@@ -246,7 +257,8 @@ export function CanvasToolbar({
                       <button
                         key={option}
                         onClick={() => onToggleTag?.(option)}
-                        className={`block w-full rounded px-2 py-1 text-left text-xs ${tags.includes(option) ? 'bg-[#003087] text-white' : 'text-slate-200 hover:bg-white/10'}`}
+                        className={`block w-full rounded px-2 py-1 text-left text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${tags.includes(option) ? 'bg-[#003087] text-white' : 'text-slate-200 hover:bg-white/10'}`}
+                        aria-label={`Toggle tag ${option}`}
                       >
                         {option}
                       </button>
@@ -259,10 +271,19 @@ export function CanvasToolbar({
         </div>
 
         <div className="relative flex items-center gap-1">
-          <button onClick={onSave} className="rounded-md p-2 text-[#CC0000] hover:bg-white/10" aria-label="Save play">
+          <button
+            onClick={onSave}
+            className="rounded-md p-2 text-[#CC0000] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label="Save play"
+          >
             <Save className="h-4 w-4" />
           </button>
-          <button ref={moreButtonRef} onClick={onToggleMoreMenu} className="rounded-md p-2 text-white/90 hover:bg-white/10" aria-label="More options">
+          <button
+            ref={moreButtonRef}
+            onClick={onToggleMoreMenu}
+            className="rounded-md p-2 text-white/90 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            aria-label="More options"
+          >
             <MoreVertical className="h-4 w-4" />
           </button>
           {moreMenuOpen && moreMenu && menuPos && typeof document !== 'undefined'
@@ -281,8 +302,9 @@ export function CanvasToolbar({
           <div className="flex w-full items-center gap-2 overflow-x-auto pb-1">
             <button
               onClick={onInsertOLGroup}
-              className="inline-flex h-12 min-w-[72px] flex-col items-center justify-center rounded-xl border border-[#CC0000]/70 bg-[#CC0000] px-3 hover:brightness-110"
+              className="inline-flex h-12 min-w-[72px] flex-col items-center justify-center rounded-xl border border-[#CC0000]/70 bg-[#A40000] px-3 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               title="OL Group"
+              aria-label="Insert offensive line group"
             >
               <OLGroupIcon />
               <span className="text-[8px] font-bold uppercase leading-none text-white/90">OL</span>
@@ -293,8 +315,9 @@ export function CanvasToolbar({
                 {idx === 1 || idx === 3 ? <div className="h-6 w-px bg-white/20" /> : null}
                 <button
                   onClick={() => onInsertPlayer(token)}
-                  className="inline-flex h-11 min-w-[44px] items-center justify-center"
+                  className="inline-flex h-11 min-w-[44px] items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   title={`Add ${token.label}`}
+                  aria-label={`Add offense player ${token.label}`}
                 >
                   <span className={tokenClasses(token.label, token.side)}>{token.label}</span>
                 </button>
@@ -309,8 +332,9 @@ export function CanvasToolbar({
               <button
                 key={`def-${token.label}`}
                 onClick={() => onInsertPlayer(token)}
-                className="inline-flex h-11 min-w-[44px] items-center justify-center"
+                className="inline-flex h-11 min-w-[44px] items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 title={`Add ${token.label}`}
+                aria-label={`Add defense player ${token.label}`}
               >
                 <span className={tokenClasses(token.label, token.side)}>{token.label}</span>
               </button>
@@ -324,7 +348,8 @@ export function CanvasToolbar({
               <button
                 key={`${preset.side}-${preset.name}`}
                 onClick={() => onApplyPreset(preset.name, preset.side)}
-                className={`rounded-md border px-2 py-1 text-xs font-medium text-white hover:brightness-110 ${preset.side === 'offense' ? 'border-[#CC0000]/30 bg-[#CC0000]/20' : 'border-[#003087]/40 bg-[#003087]/25'}`}
+                className={`rounded-md border px-2 py-1 text-xs font-medium text-white hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${preset.side === 'offense' ? 'border-[#CC0000]/30 bg-[#A40000]/20' : 'border-[#003087]/40 bg-[#003087]/25'}`}
+                aria-label={`Apply ${preset.name} ${preset.side} preset`}
               >
                 {preset.name}
               </button>
@@ -339,7 +364,8 @@ export function CanvasToolbar({
             onClick={onUndo}
             disabled={!onUndo || !canUndo}
             title="Undo"
-            className="flex flex-col items-center gap-0.5 rounded-md px-3 py-2 text-slate-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
+            aria-label="Undo"
+            className="flex flex-col items-center gap-0.5 rounded-md px-3 py-2 text-slate-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <Undo2 className="h-5 w-5" />
             <span className="text-[8px] uppercase leading-none tracking-wide opacity-60">UNDO</span>
@@ -348,7 +374,8 @@ export function CanvasToolbar({
             onClick={onRedo}
             disabled={!onRedo || !canRedo}
             title="Redo"
-            className="flex flex-col items-center gap-0.5 rounded-md px-3 py-2 text-slate-300 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
+            aria-label="Redo"
+            className="flex flex-col items-center gap-0.5 rounded-md px-3 py-2 text-slate-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:opacity-40 disabled:hover:bg-transparent"
           >
             <Redo2 className="h-5 w-5" />
             <span className="text-[8px] uppercase leading-none tracking-wide opacity-60">REDO</span>
@@ -356,29 +383,53 @@ export function CanvasToolbar({
 
           {tools.map((t) => {
             const Icon = t.icon;
-            const activeClass = active === t.key ? 'bg-[#CC0000] text-white' : 'bg-transparent text-slate-300 hover:bg-white/10';
+            const activeClass = active === t.key ? 'bg-[#A40000] text-white' : 'bg-transparent text-slate-300 hover:bg-white/10';
             return (
               <button
                 key={t.key}
                 onClick={() => setActive(t.key === 'select' ? 'select' : active === t.key ? 'select' : t.key)}
                 title={`${t.label} (${t.shortcut})`}
-                className={`flex flex-col items-center gap-0.5 rounded-md px-3 py-2 ${activeClass}`}
+                aria-label={`${t.label} tool`}
+                className={`flex flex-col items-center gap-0.5 rounded-md px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${activeClass}`}
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-[8px] uppercase leading-none tracking-wide opacity-60">{t.label}</span>
               </button>
             );
           })}
-          <button onClick={onDeleteSelected} title="Delete selected" className="flex flex-col items-center gap-0.5 rounded-md px-3 py-2 text-slate-300 hover:bg-white/10">
+          <button
+            onClick={onDeleteSelected}
+            title="Delete selected"
+            aria-label="Delete selected elements"
+            className="flex flex-col items-center gap-0.5 rounded-md px-3 py-2 text-slate-300 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
             <Trash2 className="h-5 w-5" />
             <span className="text-[8px] uppercase leading-none tracking-wide opacity-60">DELETE</span>
           </button>
         </div>
 
         <div className="flex items-center gap-1 text-sm font-medium">
-          <button onClick={() => setActiveTab('offense')} className={`rounded-md px-2 py-1 ${activeTab === 'offense' ? 'bg-[#CC0000] text-white' : 'bg-white/5 text-slate-200'}`}>Offense</button>
-          <button onClick={() => setActiveTab('defense')} className={`rounded-md px-2 py-1 ${activeTab === 'defense' ? 'bg-[#CC0000] text-white' : 'bg-white/5 text-slate-200'}`}>Defense</button>
-          <button onClick={() => setActiveTab('presets')} className={`rounded-md px-2 py-1 ${activeTab === 'presets' ? 'bg-[#CC0000] text-white' : 'bg-white/5 text-slate-200'}`}>Presets</button>
+          <button
+            onClick={() => setActiveTab('offense')}
+            className={`rounded-md px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${activeTab === 'offense' ? 'bg-[#A40000] text-white' : 'bg-white/5 text-slate-200'}`}
+            aria-label="Show offense tokens"
+          >
+            Offense
+          </button>
+          <button
+            onClick={() => setActiveTab('defense')}
+            className={`rounded-md px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${activeTab === 'defense' ? 'bg-[#A40000] text-white' : 'bg-white/5 text-slate-200'}`}
+            aria-label="Show defense tokens"
+          >
+            Defense
+          </button>
+          <button
+            onClick={() => setActiveTab('presets')}
+            className={`rounded-md px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${activeTab === 'presets' ? 'bg-[#A40000] text-white' : 'bg-white/5 text-slate-200'}`}
+            aria-label="Show preset formations"
+          >
+            Presets
+          </button>
         </div>
       </footer>
     </>

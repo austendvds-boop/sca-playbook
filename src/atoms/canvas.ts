@@ -1,15 +1,26 @@
 import { atom } from 'jotai';
+import { atomFamily } from 'jotai/utils';
 import { CanvasElement } from '@/lib/store';
 
 export type Tool = 'select' | 'player' | 'route' | 'dashed_route' | 'tbar' | 'zone';
 export type FieldType = 'half' | 'full' | 'redzone';
+export type Viewport = { x: number; y: number; zoom: number };
 
-// TODO(architecture): Move canvas state to atomFamily keyed by play id so multiple tabs/edit sessions do not share a single global canvas snapshot.
-export const elementsAtom = atom<Map<string, CanvasElement>>(new Map());
-export const selectedIdsAtom = atom<Set<string>>(new Set<string>());
-export const activeToolAtom = atom<Tool>('select');
-export const fieldTypeAtom = atom<FieldType>('half');
-export const viewportAtom = atom({ x: 0, y: 0, zoom: 1 });
-export const undoStackAtom = atom<CanvasElement[][]>([]);
-export const redoStackAtom = atom<CanvasElement[][]>([]);
+export const DEFAULT_CANVAS_PLAY_ID = 'new';
 
+export const elementsAtomFamily = atomFamily((playId: string) => atom<Map<string, CanvasElement>>(new Map()), Object.is);
+export const selectedIdsAtomFamily = atomFamily((playId: string) => atom<Set<string>>(new Set<string>()), Object.is);
+export const activeToolAtomFamily = atomFamily((playId: string) => atom<Tool>('select'), Object.is);
+export const fieldTypeAtomFamily = atomFamily((playId: string) => atom<FieldType>('half'), Object.is);
+export const viewportAtomFamily = atomFamily((playId: string) => atom<Viewport>({ x: 0, y: 0, zoom: 1 }), Object.is);
+export const undoStackAtomFamily = atomFamily((playId: string) => atom<CanvasElement[][]>([]), Object.is);
+export const redoStackAtomFamily = atomFamily((playId: string) => atom<CanvasElement[][]>([]), Object.is);
+
+// Backward-compatible defaults for code paths that still use singleton imports.
+export const elementsAtom = elementsAtomFamily(DEFAULT_CANVAS_PLAY_ID);
+export const selectedIdsAtom = selectedIdsAtomFamily(DEFAULT_CANVAS_PLAY_ID);
+export const activeToolAtom = activeToolAtomFamily(DEFAULT_CANVAS_PLAY_ID);
+export const fieldTypeAtom = fieldTypeAtomFamily(DEFAULT_CANVAS_PLAY_ID);
+export const viewportAtom = viewportAtomFamily(DEFAULT_CANVAS_PLAY_ID);
+export const undoStackAtom = undoStackAtomFamily(DEFAULT_CANVAS_PLAY_ID);
+export const redoStackAtom = redoStackAtomFamily(DEFAULT_CANVAS_PLAY_ID);

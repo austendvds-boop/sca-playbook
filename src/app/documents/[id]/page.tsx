@@ -8,6 +8,7 @@ import { ReferenceSheetTemplate } from '@/components/templates/ReferenceSheetTem
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
 import { SafeSvgPreview } from '@/components/shared/SafeSvgPreview';
 import { defaultPlayCardLayout, normalizePlayCardLayout } from '@/lib/installSheet';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export default function DocEdit({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -152,7 +153,8 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
   }
 
   return (
-    <main className='h-[100dvh] overflow-hidden p-3 md:p-4'>
+    <ErrorBoundary>
+      <main className='h-[100dvh] overflow-hidden p-3 md:p-4'>
       <div className='mx-auto flex h-full max-w-6xl flex-col gap-3 overflow-hidden'>
         <div className='no-print flex shrink-0 items-center gap-2'>
           <Link href='/documents' className='rounded border border-[#003087] px-3 py-2 text-sm font-black uppercase text-[#003087]'>
@@ -221,5 +223,6 @@ export default function DocEdit({ params }: { params: Promise<{ id: string }> })
         </div>
       ) : null}
     </main>
+    </ErrorBoundary>
   );
 }

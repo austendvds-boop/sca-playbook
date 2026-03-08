@@ -59,6 +59,9 @@ export function EditableText({
     <div
       ref={ref}
       className={className}
+      role="textbox"
+      aria-label={placeholder || 'Editable text input'}
+      aria-multiline={Boolean(multiline)}
       contentEditable
       suppressContentEditableWarning
       onInput={(e) => setDraft(e.currentTarget.textContent ?? '')}

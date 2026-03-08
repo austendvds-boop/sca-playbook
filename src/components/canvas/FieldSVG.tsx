@@ -1,10 +1,20 @@
 "use client";
 import { useAtom } from 'jotai';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
-import { activeToolAtom, elementsAtom, selectedIdsAtom, undoStackAtom, redoStackAtom, viewportAtom, Tool } from '@/atoms/canvas';
+import {
+  activeToolAtomFamily,
+  DEFAULT_CANVAS_PLAY_ID,
+  elementsAtomFamily,
+  redoStackAtomFamily,
+  selectedIdsAtomFamily,
+  Tool,
+  undoStackAtomFamily,
+  viewportAtomFamily
+} from '@/atoms/canvas';
 import { CanvasElement, LineElement, Point, ZoneElement } from '@/lib/store';
 import { PlaySVGRenderer } from '@/components/shared/PlaySVGRenderer';
+import { ShortcutsOverlay } from '@/components/shared/ShortcutsOverlay';
 
 const FIELD_WIDTH = 1000;
 const FIELD_HEIGHT = 560;
@@ -48,13 +58,21 @@ function snapshotFromMap(map: Map<string, CanvasElement>) {
   return [...map.values()].map(cloneElement);
 }
 
-export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
-  const [tool, setTool] = useAtom(activeToolAtom);
-  const [elements, setElements] = useAtom(elementsAtom);
-  const [selected, setSelected] = useAtom(selectedIdsAtom);
-  const [, setUndo] = useAtom(undoStackAtom);
-  const [, setRedo] = useAtom(redoStackAtom);
-  const [viewport, setViewport] = useAtom(viewportAtom);
+function isTextInputFocused(target: EventTarget | null) {
+  const el = target as HTMLElement | null;
+  const tag = el?.tagName?.toLowerCase();
+  return Boolean(el?.isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select');
+}
+
+export function FieldSVG({ onSave, playId, playTitle }: { onSave?: () => void; playId?: string; playTitle?: string } = {}) {
+  const resolvedPlayId = playId ?? DEFAULT_CANVAS_PLAY_ID;
+  const [tool, setTool] = useAtom(activeToolAtomFamily(resolvedPlayId));
+  const [elements, setElements] = useAtom(elementsAtomFamily(resolvedPlayId));
+  const [selected, setSelected] = useAtom(selectedIdsAtomFamily(resolvedPlayId));
+  const [, setUndo] = useAtom(undoStackAtomFamily(resolvedPlayId));
+  const [, setRedo] = useAtom(redoStackAtomFamily(resolvedPlayId));
+  const [viewport, setViewport] = useAtom(viewportAtomFamily(resolvedPlayId));
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const dragRef = useRef<{ id: string; dx: number; dy: number } | null>(null);
   const freehandRef = useRef<Point[]>([]);
   const isDrawingRef = useRef(false);
@@ -63,11 +81,11 @@ export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
 
   const elementArr = useMemo(() => [...elements.values()], [elements]);
 
-  const commit = (next: Map<string, CanvasElement>) => {
+  const commit = useCallback((next: Map<string, CanvasElement>) => {
     setUndo((prev) => [...prev, snapshotFromMap(elements)].slice(-MAX_HISTORY));
     setRedo([]);
     setElements(next);
-  };
+  }, [elements, setElements, setRedo, setUndo]);
 
   const startFreehand = (evt: React.PointerEvent<SVGSVGElement> | React.PointerEvent<SVGElement>, startPoint: Point) => {
     const svg = evt.currentTarget instanceof SVGSVGElement ? evt.currentTarget : evt.currentTarget.ownerSVGElement;
@@ -102,14 +120,27 @@ export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
 
   useEffect(() => {
     const onKey = (evt: KeyboardEvent) => {
-      const target = evt.target as HTMLElement | null;
-      const tag = target?.tagName?.toLowerCase();
-      if (target?.isContentEditable || tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      if (isTextInputFocused(evt.target)) return;
 
       const key = evt.key.toLowerCase();
       const mod = evt.metaKey || evt.ctrlKey;
 
-      if (mod && key === 'z') {
+      if (key === '?') {
+        evt.preventDefault();
+        setShortcutsOpen((prev) => !prev);
+        return;
+      }
+
+      if (evt.key === 'Escape') {
+        if (shortcutsOpen) {
+          evt.preventDefault();
+          setShortcutsOpen(false);
+          return;
+        }
+        setTool('select');
+      }
+
+      if ((key === 'z' && !mod) || (mod && key === 'z')) {
         evt.preventDefault();
         if (evt.shiftKey) {
           window.dispatchEvent(new CustomEvent('canvas-redo'));
@@ -128,8 +159,7 @@ export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
       if (key === 'r') setTool('route');
       if (key === 'm') setTool('dashed_route');
       if (key === 'b') setTool('tbar');
-      if (key === 'z') setTool('zone');
-      if (key === 's' || evt.key === 'Escape') setTool('select');
+      if (key === 's') setTool('select');
 
       if ((evt.key === 'Delete' || evt.key === 'Backspace') && selected.size > 0) {
         evt.preventDefault();
@@ -142,7 +172,7 @@ export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [setTool, elements, selected, setSelected, onSave]);
+  }, [commit, elements, onSave, selected, setSelected, setTool, shortcutsOpen]);
 
   const onPointerMove = (evt: React.PointerEvent<SVGSVGElement>) => {
     const p = svgPoint(evt);
@@ -158,7 +188,6 @@ export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
         freehandRef.current = [...freehandRef.current, p];
         setPreview([...freehandRef.current]);
       }
-      return;
     }
   };
 
@@ -196,6 +225,7 @@ export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
   return (
     <div className={`relative h-full w-full overflow-hidden rounded-none bg-gray-100 ${cursorClass}`}>
       <PlaySVGRenderer
+        playTitle={playTitle}
         elements={elementArr}
         className="h-full w-full"
         viewport={viewport}
@@ -235,6 +265,7 @@ export function FieldSVG({ onSave }: { onSave?: () => void } = {}) {
           if (tool === 'select') setSelected(new Set());
         }}
       />
+      <ShortcutsOverlay open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   );
 }

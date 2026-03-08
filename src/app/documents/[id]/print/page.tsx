@@ -78,10 +78,10 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
 
   if (loading) {
     return (
-      <main className='print-loading p-5 text-[#003087]'>
+      <main className='loading p-5 text-[#003087]'>
         <style jsx global>{`
           @media print {
-            .print-loading { display: none !important; }
+            .loading { display: none !important; }
           }
         `}</style>
         Preparing document...
@@ -98,7 +98,7 @@ export default function PrintDoc({ params }: { params: Promise<{ id: string }> }
           @page { size: letter portrait; margin: 0.5in; }
           html, body { margin: 0 !important; padding: 0 !important; }
           .no-print { display: none !important; }
-          .print-loading { display: none !important; }
+          .loading { display: none !important; }
           [contenteditable='true'] { outline: none !important; }
         }
       `}</style>

@@ -6,6 +6,7 @@ import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
 import { FieldSVG } from '@/components/canvas/FieldSVG';
 import { SaveStatus, useCanvasEditor } from '@/hooks/useCanvasEditor';
 import { CanvasElement } from '@/lib/store';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 function SaveStatusIndicator({ status }: { status: SaveStatus }) {
   if (status === 'idle') return null;
@@ -78,14 +79,17 @@ export default function NewPlay() {
     handleRedo,
     deleteSelected
   } = useCanvasEditor({
+    playId: 'new',
     initialCanvasData: [],
     onSave: saveNewPlay
   });
 
   return (
-    <main className="w-screen overflow-hidden bg-[#111124] text-white" style={{ height: '100dvh' }}>
+    <ErrorBoundary>
+      <main className="w-screen overflow-hidden bg-[#111124] text-white" style={{ height: '100dvh' }}>
       <div className="flex h-dvh w-screen flex-col overflow-hidden">
         <CanvasToolbar
+          playId="new"
           name={name}
           onNameChange={setName}
           onBack={() => router.push('/plays')}
@@ -109,9 +113,14 @@ export default function NewPlay() {
         </div>
 
         <div className="min-h-0 w-full" style={{ height: 'calc(100vh - 132px)' }}>
-          <FieldSVG onSave={() => void requestSaveNow().catch(() => window.alert('Failed to save play. Please try again.'))} />
+          <FieldSVG
+            playId="new"
+            playTitle={name}
+            onSave={() => void requestSaveNow().catch(() => window.alert('Failed to save play. Please try again.'))}
+          />
         </div>
       </div>
     </main>
+    </ErrorBoundary>
   );
 }

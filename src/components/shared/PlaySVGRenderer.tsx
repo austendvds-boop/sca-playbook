@@ -5,6 +5,7 @@ import { FieldBackground } from '@/components/canvas/FieldBackground';
 type Props = {
   elements: CanvasElement[];
   className?: string;
+  playTitle?: string;
   viewport?: { x: number; y: number; zoom: number };
   previewPath?: Point[];
   selectedIds?: Set<string>;
@@ -92,9 +93,25 @@ function tBarData(points: Point[]): { x1: number; y1: number; x2: number; y2: nu
   };
 }
 
-export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onLinePointerDown, onBackgroundPointerDown, viewBox = '0 0 1000 560' }: Props) {
+export function PlaySVGRenderer({ elements, className, playTitle, viewport = { x: 0, y: 0, zoom: 1 }, previewPath, selectedIds, touchActionNone, draggingPlayer, onCanvasClick, onCanvasPointerMove, onCanvasPointerUp, onCanvasDoubleClick, onPlayerPointerDown, onLinePointerDown, onBackgroundPointerDown, viewBox = '0 0 1000 560' }: Props) {
+  const svgLabel = `Football play diagram: ${playTitle?.trim() || 'Untitled Play'}`;
+
   return (
-    <svg viewBox={viewBox} preserveAspectRatio="xMidYMid meet" width="100%" height="100%" className={className} style={{ touchAction: touchActionNone ? 'none' : 'auto' }} onClick={onCanvasClick} onPointerMove={onCanvasPointerMove} onPointerUp={onCanvasPointerUp} onDoubleClick={onCanvasDoubleClick} onPointerDown={onBackgroundPointerDown}>
+    <svg
+      viewBox={viewBox}
+      preserveAspectRatio="xMidYMid meet"
+      width="100%"
+      height="100%"
+      role="img"
+      aria-label={svgLabel}
+      className={className}
+      style={{ touchAction: touchActionNone ? 'none' : 'auto' }}
+      onClick={onCanvasClick}
+      onPointerMove={onCanvasPointerMove}
+      onPointerUp={onCanvasPointerUp}
+      onDoubleClick={onCanvasDoubleClick}
+      onPointerDown={onBackgroundPointerDown}
+    >
       <defs>
         {/* Small open arrowhead - thin V tip */}
         <marker
@@ -135,7 +152,12 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
             const renderX = draggingPlayer?.id === el.id ? draggingPlayer.x : el.x;
             const renderY = draggingPlayer?.id === el.id ? draggingPlayer.y : el.y;
             return (
-              <g key={el.id} onPointerDown={(evt) => onPlayerPointerDown?.(el.id, evt, renderX, renderY)}>
+              <g
+                key={el.id}
+                role="button"
+                aria-label={`${el.side} player ${upper}`}
+                onPointerDown={(evt) => onPlayerPointerDown?.(el.id, evt, renderX, renderY)}
+              >
                 {selected ? <circle cx={renderX} cy={renderY} r={18} fill="none" stroke="rgba(248,250,252,0.45)" strokeWidth={4} /> : null}
                 {!isOL ? <circle cx={renderX} cy={renderY} r={14} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 3 : 1} /> : null}
                 {isOL ? <rect x={renderX - 10} y={renderY - 10} width={20} height={20} fill={fill} stroke={selected ? '#f8fafc' : fill} strokeWidth={selected ? 3 : 1} rx={2} /> : null}
@@ -148,6 +170,7 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
             return (
               <ellipse
                 key={el.id}
+                aria-label="Zone marker"
                 cx={el.cx}
                 cy={el.cy}
                 rx={el.rx}
@@ -168,7 +191,7 @@ export function PlaySVGRenderer({ elements, className, viewport = { x: 0, y: 0, 
           const stroke = isSelected ? '#f59e0b' : '#111';
           const markerEnd = lineStyle === 'tbar' || el.noArrow ? undefined : 'url(#arrow-open)';
           return (
-            <g key={el.id} onPointerDown={(evt) => onLinePointerDown?.(el.id, evt)}>
+            <g key={el.id} role="button" aria-label="Route element" onPointerDown={(evt) => onLinePointerDown?.(el.id, evt)}>
               <path d={d} fill="none" stroke="transparent" strokeWidth={16} strokeLinecap="round" strokeLinejoin="round" markerEnd={markerEnd} />
               <path d={d} fill="none" stroke={stroke} strokeWidth={2.5} strokeDasharray={lineStyle === 'dashed_route' ? '8 5' : undefined} markerEnd={markerEnd} strokeLinecap="round" strokeLinejoin="round" />
               {tbar ? (<><line x1={tbar.x1} y1={tbar.y1} x2={tbar.x2} y2={tbar.y2} stroke="transparent" strokeWidth={16} /><line x1={tbar.x1} y1={tbar.y1} x2={tbar.x2} y2={tbar.y2} stroke={stroke} strokeWidth={2.5} /></>) : null}

@@ -6,6 +6,7 @@ import { CanvasToolbar } from '@/components/canvas/CanvasToolbar';
 import { FieldSVG } from '@/components/canvas/FieldSVG';
 import { SaveStatus, useCanvasEditor } from '@/hooks/useCanvasEditor';
 import { CanvasElement } from '@/lib/store';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 const TAG_OPTIONS = ['red_zone', 'goal_line', '3rd_down', '2_minute', 'general'];
 
@@ -196,9 +197,11 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
   };
 
   return (
-    <main className="w-screen overflow-hidden bg-[#111124] text-white" style={{ height: '100dvh' }}>
+    <ErrorBoundary>
+      <main className="w-screen overflow-hidden bg-[#111124] text-white" style={{ height: '100dvh' }}>
       <div className="flex h-dvh w-screen flex-col overflow-hidden">
         <CanvasToolbar
+          playId={id}
           name={name}
           onNameChange={(next) => void renamePlay(next)}
           onBack={() => router.push('/plays')}
@@ -237,9 +240,14 @@ export default function PlayEdit({ params }: { params: Promise<{ id: string }> }
         </div>
 
         <div className="min-h-0 w-full" style={{ height: 'calc(100vh - 132px)' }}>
-          <FieldSVG onSave={() => void requestSaveNow().catch(() => window.alert('Failed to save play. Please try again.'))} />
+          <FieldSVG
+            playId={id}
+            playTitle={name}
+            onSave={() => void requestSaveNow().catch(() => window.alert('Failed to save play. Please try again.'))}
+          />
         </div>
       </div>
     </main>
+    </ErrorBoundary>
   );
 }

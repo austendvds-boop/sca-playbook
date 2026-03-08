@@ -3,7 +3,13 @@
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
-import { elementsAtom, redoStackAtom, selectedIdsAtom, undoStackAtom } from '@/atoms/canvas';
+import {
+  DEFAULT_CANVAS_PLAY_ID,
+  elementsAtomFamily,
+  redoStackAtomFamily,
+  selectedIdsAtomFamily,
+  undoStackAtomFamily
+} from '@/atoms/canvas';
 import { defensePresets, offensePresets } from '@/lib/presets';
 import { CanvasElement } from '@/lib/store';
 
@@ -37,10 +43,11 @@ const snapshotFromMap = (map: Map<string, CanvasElement>) => [...map.values()].m
 
 
 export function useCanvasEditor({ playId, initialCanvasData, onSave }: UseCanvasEditorConfig) {
-  const [elements, setElements] = useAtom(elementsAtom);
-  const [selected, setSelected] = useAtom(selectedIdsAtom);
-  const [undoStack, setUndo] = useAtom(undoStackAtom);
-  const [redoStack, setRedo] = useAtom(redoStackAtom);
+  const resolvedPlayId = playId ?? DEFAULT_CANVAS_PLAY_ID;
+  const [elements, setElements] = useAtom(elementsAtomFamily(resolvedPlayId));
+  const [selected, setSelected] = useAtom(selectedIdsAtomFamily(resolvedPlayId));
+  const [undoStack, setUndo] = useAtom(undoStackAtomFamily(resolvedPlayId));
+  const [redoStack, setRedo] = useAtom(redoStackAtomFamily(resolvedPlayId));
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
   const autosaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

@@ -100,3 +100,30 @@
 ### Final notes
 - Existing print-page `.loading` class updates from CT-B3 Retry remain intact.
 - Shortcut behavior now prioritizes `Z` / `Shift+Z` undo/redo per spec; zone tool remains available from toolbar button.
+
+---
+
+## Batch B1 - Custom 404 Page + Page Metadata (2026-03-11)
+
+### Files Modified
+- `src/app/page.tsx`
+- `src/app/HomePageClient.tsx` (new)
+- `src/app/plays/page.tsx`
+- `src/app/plays/PlaysPageClient.tsx` (new)
+- `src/app/documents/page.tsx`
+- `src/app/documents/DocumentsPageClient.tsx` (new)
+- `src/app/not-found.tsx` (new)
+- `docs/ralph-context.md`
+
+### Changes implemented
+- Added a custom App Router 404 page using the existing SCA navy/white/red branding, the SCA logo, plain-language copy, and a home link.
+- Added page-level metadata for the home page, play library, and install sheets routes.
+- Preserved the existing base metadata in `src/app/layout.tsx` and relied on page-level metadata to override the route title/description.
+- Split the three route files into server wrappers plus colocated client components so metadata can be exported without changing client-side page behavior.
+
+### Verification
+- `npm run build` passed successfully (Next.js production build, TypeScript, and static page generation).
+
+### Gotchas / Notes
+- Next.js does not allow `metadata` exports from `use client` page files, so each affected route now uses a server `page.tsx` that renders a separate client component.
+- The existing non-blocking Turbopack root warning and Jotai `atomFamily` deprecation warning still appear during build.

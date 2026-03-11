@@ -1,5 +1,23 @@
 # Ralph Context
 
+## Batch B2 - Footer Component + Final Polish (2026-03-11)
+
+### Files Modified
+- `src/components/shared/Footer.tsx` (new)
+- `src/app/layout.tsx`
+- `docs/ralph-context.md`
+
+### Changes implemented
+- Added a shared `Footer` component with understated styling: centered `© 2026 SCA ChalkTalk` text, subtle top border, light gray background, and small muted copy.
+- Updated the root layout to use a `min-h-screen flex flex-col` body, wrapped route content in a `flex-1` container, and rendered the footer after `{children}` so it stays at the bottom without disturbing existing metadata or nav behavior.
+- Preserved the existing B1 metadata exports and left the custom 404 route untouched.
+
+### Verification
+- `npm run build` passed successfully (Next.js production build, TypeScript, and static page generation).
+
+### Gotchas / Notes
+- The footer is global, so it now appears on all routes, including the custom 404 page and print routes unless those routes hide it with print CSS.
+
 ## Batch CT-B3 - Reference Sheet Print Support + Loading Skeleton States (2026-03-08)
 
 ### Files Modified

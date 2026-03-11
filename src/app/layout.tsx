@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ConditionalNav } from '@/components/ConditionalNav';
+import { Footer } from '@/components/shared/Footer';
 
 const siteTitle = 'ChalkTalk — SCA Eagles Football';
 const siteDescription = 'SCA Eagles Football play diagramming and install sheet builder';
@@ -31,9 +32,10 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, maxi
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" style={{ overscrollBehavior: 'none' }}>
-      <body className="bg-white text-[#003087]">
+      <body className="flex min-h-screen flex-col bg-white text-[#003087]">
         <ConditionalNav />
-        {children}
+        <div className="flex-1">{children}</div>
+        <Footer />
       </body>
     </html>
   );
